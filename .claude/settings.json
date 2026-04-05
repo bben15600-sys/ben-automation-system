@@ -1,0 +1,14 @@
+{
+  "project": {
+    "name": "ben-automation-system",
+    "description": "Personal AI automation system — Claude Code as engine, Notion as data layer"
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write",
+      "Edit",
+      "Bash"
+    ]
+  }
+}
