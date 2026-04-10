@@ -1,6 +1,7 @@
 # Secrets & API keys
 .env
 .env.*
+!.env.example
 *.key
 secrets/
 
