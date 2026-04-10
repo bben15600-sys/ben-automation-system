@@ -1,0 +1,30 @@
+name: Weekly Schedule Generator
+
+on:
+  schedule:
+    # Every Sunday at 09:00 Israel time (UTC+3 = 06:00 UTC)
+    - cron: "0 6 * * 0"
+  workflow_dispatch:  # Allow manual trigger from GitHub UI
+
+jobs:
+  generate-schedule:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run weekly scheduler
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          ROTATION_DB_ID: ${{ secrets.ROTATION_DB_ID }}
+          WEEKLY_DB_ID: ${{ secrets.WEEKLY_DB_ID }}
+        run: python scripts/weekly_scheduler.py
