@@ -63,15 +63,44 @@ def resolve_db_id(id_or_page: str, hint: str = "") -> str:
     for db in results.get("results", []):
         title_parts = db.get("title", [])
         name = title_parts[0]["plain_text"] if title_parts else ""
-        log.info("  Found database: %s  id=%s", name, db["id"])
         if hint and hint.lower() in name.lower():
-            log.info("  → Matched! Using %s", db["id"])
+            log.info("Resolved %r → database %s (%s)", hint, db["id"], name)
             return db["id"]
-    raise ValueError(
-        f"Could not resolve {id_or_page!r} to a database. "
-        f"Make sure the integration is shared with the database. "
-        f"Available databases logged above."
+    # Database not found — create it inside the given page
+    if hint == "Weekly Schedule":
+        log.info("Weekly Schedule DB not found — creating it inside page %s…", id_or_page)
+        return create_weekly_schedule_db(parent_page_id=id_or_page)
+    raise ValueError(f"Could not resolve {id_or_page!r} to a database (hint={hint!r}).")
+
+
+def create_weekly_schedule_db(parent_page_id: str) -> str:
+    """Create the Weekly Schedule DB inside the given parent page and return its ID."""
+    def sel(options: list[str]) -> dict:
+        return {"select": {"options": [{"name": o} for o in options]}}
+
+    db = notion.databases.create(
+        parent={"type": "page_id", "page_id": parent_page_id},
+        title=[{"type": "text", "text": {"content": "Weekly Schedule DB"}}],
+        properties={
+            "Name":           {"title": {}},
+            "Day":            sel(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]),
+            "Date":           {"date": {}},
+            "Week Type":      sel(["Base", "Home"]),
+            "Morning Block":  {"rich_text": {}},
+            "Afternoon Block":{"rich_text": {}},
+            "Evening Block":  {"rich_text": {}},
+            "Basketball":     {"checkbox": {}},
+            "Lihi":           {"checkbox": {}},
+            "Family":         {"checkbox": {}},
+            "Editing":        {"checkbox": {}},
+            "VR Event":       {"checkbox": {}},
+            "Priority":       sel(["דחוף", "בינוני", "גמיש"]),
+            "Notes":          {"rich_text": {}},
+        },
     )
+    db_id = db["id"]
+    log.info("Created Weekly Schedule DB with id=%s", db_id)
+    return db_id
 
 
 def get_week_start() -> date:
