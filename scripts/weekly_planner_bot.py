@@ -417,6 +417,29 @@ def _get_next_sunday() -> date:
     return today + timedelta(days=diff if diff > 0 else 7)
 
 
+def _resolve_db_id(notion, id_or_page: str) -> str:
+    """Return real database ID — handles case where ROTATION_DB_ID points to a page."""
+    try:
+        notion.databases.retrieve(database_id=id_or_page)
+        return id_or_page
+    except Exception:
+        pass
+    print(f"ID {id_or_page} is not a database — searching for Rotation DB…")
+    results = notion.search(filter={"property": "object", "value": "database"})
+    for db in results.get("results", []):
+        title_parts = db.get("title", [])
+        name = title_parts[0]["plain_text"] if title_parts else ""
+        if "rotation" in name.lower() or "רוטציה" in name.lower():
+            print(f"Resolved Rotation DB → {db['id']} ({name})")
+            return db["id"]
+    all_dbs = results.get("results", [])
+    if all_dbs:
+        db = all_dbs[0]
+        print(f"Warning: using first DB found: {db['id']}")
+        return db["id"]
+    raise ValueError(f"Could not resolve {id_or_page!r} to a database.")
+
+
 def _save_to_notion(plan: dict) -> None:
     if not NOTION_TOKEN:
         print("No NOTION_TOKEN — skipping Notion write.")
@@ -425,36 +448,58 @@ def _save_to_notion(plan: dict) -> None:
     from notion_client import Client
     notion = Client(auth=NOTION_TOKEN)
 
-    # Ensure Plan JSON field exists
+    # Resolve real DB id (handles page-id-as-db-id issue)
+    db_id = _resolve_db_id(notion, ROTATION_DB_ID)
+
+    # Ensure "Plan JSON" rich_text property exists in the DB schema
     try:
-        notion.databases.update(
-            database_id=ROTATION_DB_ID,
-            properties={"Plan JSON": {"rich_text": {}}}
-        )
+        db_meta = notion.databases.retrieve(database_id=db_id)
+        if "Plan JSON" not in db_meta.get("properties", {}):
+            print("Adding 'Plan JSON' property to DB schema…")
+            notion.databases.update(
+                database_id=db_id,
+                properties={"Plan JSON": {"rich_text": {}}}
+            )
+            print("DB schema updated.")
+        else:
+            print("'Plan JSON' property already exists.")
     except Exception as e:
-        print(f"DB schema update: {e}")
+        print(f"WARNING: DB schema check/update failed: {e}")
 
     next_sun  = _get_next_sunday()
     week_end  = next_sun + timedelta(days=6)
 
     # Check if entry already exists
-    existing = notion.databases.query(
-        database_id=ROTATION_DB_ID,
-        filter={"and": [
-            {"property": "Date", "date": {"on_or_after":  next_sun.isoformat()}},
-            {"property": "Date", "date": {"on_or_before": week_end.isoformat()}},
-        ]},
-    )
-    if existing.get("results"):
-        print(f"Entry already exists for {next_sun} — skipping.")
-        return
+    try:
+        existing = notion.databases.query(
+            database_id=db_id,
+            filter={"and": [
+                {"property": "Date", "date": {"on_or_after":  next_sun.isoformat()}},
+                {"property": "Date", "date": {"on_or_before": week_end.isoformat()}},
+            ]},
+        )
+        if existing.get("results"):
+            page_id = existing["results"][0]["id"]
+            print(f"Entry already exists for {next_sun} — updating Plan JSON…")
+            notion.pages.update(
+                page_id=page_id,
+                properties={
+                    "Plan JSON": {"rich_text": [{"text": {"content": json.dumps(plan, ensure_ascii=False)[:2000]}}]},
+                }
+            )
+            print(f"✅ Updated Plan JSON for {next_sun}")
+            return
+    except Exception as e:
+        print(f"WARNING: existing-entry query failed: {e}")
 
     basketball_days = list(dict.fromkeys(
         plan.get("basketball_days", []) + plan.get("basketball_optional", [])
     ))
+    plan_json_str = json.dumps(plan, ensure_ascii=False)
 
-    notion.pages.create(
-        parent={"database_id": ROTATION_DB_ID},
+    # Step 1: create page without Plan JSON (safe — only known fields)
+    result = notion.pages.create(
+        parent={"database_id": db_id},
         properties={
             "Name":             {"title": [{"text": {"content": f"שבוע {next_sun.strftime('%d/%m')}"}}]},
             "Week Type":        {"select": {"name": plan["week_type"]}},
@@ -462,10 +507,19 @@ def _save_to_notion(plan: dict) -> None:
             "Basketball Days":  {"multi_select": [{"name": d} for d in basketball_days]},
             "VR Events Count":  {"number": 0},
             "Schedule Created": {"checkbox": False},
-            "Plan JSON":        {"rich_text": [{"text": {"content": json.dumps(plan, ensure_ascii=False)}}]},
         },
     )
-    print(f"✅ Saved to Notion: {next_sun}")
+    page_id = result["id"]
+    print(f"✅ Page created: {page_id}")
+
+    # Step 2: update page with Plan JSON separately
+    notion.pages.update(
+        page_id=page_id,
+        properties={
+            "Plan JSON": {"rich_text": [{"text": {"content": plan_json_str[:2000]}}]},
+        }
+    )
+    print(f"✅ Plan JSON saved to Notion for week of {next_sun}")
 
 
 def _send_summary(plan: dict) -> None:
