@@ -42,8 +42,9 @@ NOTION_TOKEN   = os.environ["NOTION_TOKEN"].strip()
 ROTATION_DB_ID = _clean(os.environ.get("ROTATION_DB_ID", "29d51fc8-512b-4415-97c8-67121564b4f2"))
 WEEKLY_DB_ID   = _clean(os.environ["WEEKLY_DB_ID"])
 
-DAYS_HE = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"]
-DAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+# Week: Mon Tue Wed Thu Fri Sat Sun Mon(next) — 8 days
+DAYS_HE = ["שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת", "ראשון", "שני"]
+DAYS_EN = ["Mon", "Tue",   "Wed",   "Thu",   "Fri",  "Sat",  "Sun",  "Mon"]
 
 # Defaults (overridden by Plan JSON when available)
 DEFAULT_LIHI_DAYS  = {"Tue", "Fri", "Sat"}
@@ -109,8 +110,7 @@ def create_weekly_schedule_db(parent_page_id: str) -> str:
 
 def get_week_start() -> date:
     today = date.today()
-    days_since_sunday = (today.weekday() + 1) % 7
-    return today - timedelta(days=days_since_sunday)
+    return today - timedelta(days=today.weekday())  # weekday() 0=Mon
 
 
 def find_rotation_entry(week_start: date) -> dict | None:
@@ -285,12 +285,16 @@ def build_home_day(
     cp_min  = plan.get("course_practice_min", 60)
     sys_min = plan.get("system_min", 60)
 
+    # day_index: 0=Mon 1=Tue 2=Wed 3=Thu 4=Fri 5=Sat 6=Sun 7=Mon(next/base)
+
     # ── Morning ──────────────────────────────────────────────────────────────
-    if day_index == 0:        # Sunday
-        morning = "☀️ קימה 09:30 — אוכל, תכנון שבוע"
-    elif day_index == 6:      # Saturday
-        morning = "😴 שינה / מנוחה"
-    elif day_index == 5:      # Friday
+    if day_index == 0:        # Monday — returning home from base
+        morning = "🏠 הגעה הביתה — אוכל, בוקר"
+    elif day_index == 7:      # Monday (next) — entering base
+        morning = "✈️ כניסה לבסיס — התארגנות"
+    elif day_index == 5:      # Saturday
+        morning = "😴 שינה / מנוחה מלאה"
+    elif day_index == 4:      # Friday
         morning = "☀️ קימה 09:30 — ארוחת בוקר"
     elif has_cv:
         morning = f"☀️ קימה 09:30 — 🎬 קורס צפייה ({cv_min} דק׳)"
@@ -301,7 +305,9 @@ def build_home_day(
 
     # ── Afternoon ────────────────────────────────────────────────────────────
     editing = False
-    if has_blocked:
+    if day_index == 7:        # Monday entering base
+        afternoon = "✈️ בסיס"
+    elif has_blocked:
         afternoon = "⛔ יום חסום"
     elif has_tennis:
         afternoon = "🎾 טניס"
@@ -314,16 +320,18 @@ def build_home_day(
         editing = True
     elif has_sys and has_cv:
         afternoon = f"💻 עבודה על המערכת ({sys_min} דק׳)"
-    elif day_index == 5:
+    elif day_index == 4:      # Friday
         afternoon = "👨‍👩‍👧 משפחה (אבא, סבא וסבתא)"
-    elif day_index == 6:
+    elif day_index == 5:      # Saturday
         afternoon = "🌿 זמן חופשי"
     else:
         afternoon = "🎬 עריכה / פרויקטים אישיים"
         editing = True
 
     # ── Evening ──────────────────────────────────────────────────────────────
-    if has_blocked:
+    if day_index == 7:
+        evening = "🪖 בסיס — ערב"
+    elif has_blocked:
         evening = "⛔ —"
     elif has_basketball:
         evening = "🏀 כדורסל 20:00–22:30"
@@ -334,15 +342,15 @@ def build_home_day(
     else:
         evening = "🌙 זמן חופשי"
 
-    # ── Overrides for Sat / Fri ──────────────────────────────────────────────
-    if day_index == 6:
+    # ── Overrides for Sat ────────────────────────────────────────────────────
+    if day_index == 5:
         if not has_tennis and not has_grandparents:
             afternoon = "🌿 זמן חופשי"
         editing = False
 
-    family = has_dad or has_grandparents or (day_index == 5)
+    family = has_dad or has_grandparents or (day_index == 4)
     priority = (
-        "דחוף"  if day_index == 0 else
+        "דחוף"   if day_index in (0, 7) else
         "בינוני" if (has_lihi or has_basketball or has_blocked) else
         "גמיש"
     )
@@ -442,7 +450,7 @@ def generate_schedule(dry_run: bool = False) -> None:
         log.info("Created: %s", day_name)
 
     mark_schedule_created(rotation["id"])
-    log.info("Done — 7 pages created for %s week starting %s.", week_type, week_start)
+    log.info("Done — 8 pages created for %s week starting %s.", week_type, week_start)
 
 
 if __name__ == "__main__":
