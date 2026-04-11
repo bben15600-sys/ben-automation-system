@@ -490,6 +490,14 @@ def _save_to_notion(plan: dict) -> None:
             page_id = existing["results"][0]["id"]
             print(f"Entry already exists for {next_sun} — page ID: {page_id}")
             print(f"Notion URL: https://notion.so/{page_id.replace('-','')}")
+            # Debug: check if page is archived and print parent
+            try:
+                page_info = notion.pages.retrieve(page_id=page_id)
+                print(f"Page archived: {page_info.get('archived', False)}")
+                parent = page_info.get("parent", {})
+                print(f"Page parent: {parent}")
+            except Exception as pe:
+                print(f"Could not retrieve page: {pe}")
             print(f"Entry already exists for {next_sun} — updating Plan JSON…")
             notion.pages.update(
                 page_id=page_id,
