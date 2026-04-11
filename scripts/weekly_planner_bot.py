@@ -450,6 +450,7 @@ def _save_to_notion(plan: dict) -> None:
 
     # Resolve real DB id (handles page-id-as-db-id issue)
     db_id = _resolve_db_id(notion, ROTATION_DB_ID)
+    print(f"Using DB ID: {db_id}")
 
     # Ensure "Plan JSON" rich_text property exists in the DB schema
     try:
@@ -480,6 +481,8 @@ def _save_to_notion(plan: dict) -> None:
         )
         if existing.get("results"):
             page_id = existing["results"][0]["id"]
+            print(f"Entry already exists for {next_sun} — page ID: {page_id}")
+            print(f"Notion URL: https://notion.so/{page_id.replace('-','')}")
             print(f"Entry already exists for {next_sun} — updating Plan JSON…")
             notion.pages.update(
                 page_id=page_id,
