@@ -31,9 +31,14 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
+import re as _re
+def _clean(val: str) -> str:
+    """Remove ALL whitespace — handles copy-paste newlines embedded mid-string."""
+    return _re.sub(r'\s', '', val)
+
 NOTION_TOKEN = os.environ["NOTION_TOKEN"].strip()
-ROTATION_DB_ID = os.environ.get("ROTATION_DB_ID", "ac656f74-60b6-41a3-adc2-49e6656c3845").strip()
-WEEKLY_DB_ID = os.environ["WEEKLY_DB_ID"].strip()
+ROTATION_DB_ID = _clean(os.environ.get("ROTATION_DB_ID", "ac656f74-60b6-41a3-adc2-49e6656c3845"))
+WEEKLY_DB_ID = _clean(os.environ["WEEKLY_DB_ID"])
 
 # Hebrew day names (Sun–Sat) and matching Notion select values
 DAYS_HE = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"]
