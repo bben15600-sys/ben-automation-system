@@ -11,18 +11,24 @@ Required env vars:
 """
 
 import os
+import re
 import sys
 import urllib.request
 import urllib.parse
 import json
 
-TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"].strip()
-TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"].strip()
+
+def _clean(v: str) -> str:
+    return re.sub(r'\s', '', v)
+
+
+TELEGRAM_BOT_TOKEN = _clean(os.environ["TELEGRAM_BOT_TOKEN"])
+TELEGRAM_CHAT_ID   = _clean(os.environ["TELEGRAM_CHAT_ID"])
 
 TELEGRAM_API = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
 
-def send_message(text: str, parse_mode: str = "Markdown") -> dict:
+def send_message(text: str, parse_mode: str = "HTML") -> dict:
     url = f"{TELEGRAM_API}/sendMessage"
     payload = json.dumps({
         "chat_id": TELEGRAM_CHAT_ID,
@@ -36,17 +42,15 @@ def send_message(text: str, parse_mode: str = "Markdown") -> dict:
 
 def main():
     message = (
-        "📅 *תכנון שבוע הבא*\n\n"
+        "📅 <b>תכנון שבוע הבא</b>\n\n"
         "שלח תשובה בפורמט הבא:\n\n"
-        "```\n"
-        "סוג: בית\n"
+        "<pre>סוג: בית\n"
         "כדורסל: שני,רביעי,חמישי\n"
-        "VR: 0\n"
-        "```\n\n"
-        "📌 *אפשרויות:*\n"
-        "• *סוג:* `בית` או `בסיס`\n"
-        "• *כדורסל:* ימים מופרדים בפסיקים (או ריק אם אין)\n"
-        "• *VR:* מספר אירועי VR השבוע (ברירת מחדל: 0)\n\n"
+        "VR: 0</pre>\n\n"
+        "📌 <b>אפשרויות:</b>\n"
+        "• <b>סוג:</b> <code>בית</code> או <code>בסיס</code>\n"
+        "• <b>כדורסל:</b> ימים מופרדים בפסיקים (ריק אם אין)\n"
+        "• <b>VR:</b> מספר אירועי VR (ברירת מחדל: 0)\n\n"
         "⏰ יש לך 30 דקות לענות."
     )
     result = send_message(message)
