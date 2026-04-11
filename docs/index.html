@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>לוז שבועי — 5/4 – 11/4/2026</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d0d14;
+    color: #e2e2e8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    direction: rtl;
+    min-height: 100vh;
+    padding: 0 0 40px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 100%);
+    padding: 28px 20px 20px;
+    text-align: center;
+    border-bottom: 1px solid #ffffff10;
+  }
+  .header-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .header-sub {
+    color: #888;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  /* ── Stat cards ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 16px;
+  }
+  .stat-card {
+    background: #1a1a2a;
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .stat-num  { font-size: 34px; font-weight: 800; line-height: 1; }
+  .stat-emoji { font-size: 20px; margin: 4px 0; }
+  .stat-label { font-size: 12px; color: #aaa; }
+
+  /* ── Section title ── */
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #888;
+    padding: 8px 20px 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* ── Day cards ── */
+  .day-card {
+    background: #1a1a2a;
+    border-radius: 16px;
+    margin: 8px 16px;
+    border-right: 4px solid #555;
+    overflow: hidden;
+  }
+  .day-header {
+    padding: 14px 16px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .day-emoji { font-size: 18px; margin-left: 8px; }
+  .day-name  { font-size: 18px; font-weight: 700; }
+
+  /* ── Tags ── */
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 16px 10px; }
+  .tag {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* ── Timeline ── */
+  .timeline { padding: 4px 16px 16px; }
+  .tl-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .tl-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 12px;
+    flex-shrink: 0;
+    padding-top: 5px;
+  }
+  .tl-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .tl-line {
+    width: 2px;
+    flex: 1;
+    background: #2a2a3a;
+    min-height: 14px;
+    margin: 2px 0;
+  }
+  .tl-body  { flex: 1; padding-bottom: 10px; }
+  .tl-row   { display: flex; align-items: baseline; gap: 6px; }
+  .tl-icon  { font-size: 15px; flex-shrink: 0; }
+  .tl-text  { font-size: 14px; font-weight: 500; line-height: 1.4; }
+  .tl-time  { font-size: 11px; color: #666; margin-top: 2px; }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    color: #444;
+    font-size: 12px;
+    padding: 24px 16px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">📅 לוז שבועי</div>
+  <div class="header-sub">5/4 – 11/4/2026</div>
+</div>
+
+<div class="stats-grid">
+
+  <div class="stat-card" style="border-top:3px solid #fb923c">
+    <div class="stat-num" style="color:#fb923c">0</div>
+    <div class="stat-emoji">🏀</div>
+    <div class="stat-label">אימוני כדורסל</div>
+  </div>
+  <div class="stat-card" style="border-top:3px solid #c084fc">
+    <div class="stat-num" style="color:#c084fc">0</div>
+    <div class="stat-emoji">💛</div>
+    <div class="stat-label">ימים עם ליהי</div>
+  </div>
+  <div class="stat-card" style="border-top:3px solid #34d399">
+    <div class="stat-num" style="color:#34d399">0</div>
+    <div class="stat-emoji">🎬</div>
+    <div class="stat-label">ימי עריכה</div>
+  </div>
+  <div class="stat-card" style="border-top:3px solid #f472b6">
+    <div class="stat-num" style="color:#f472b6">0</div>
+    <div class="stat-emoji">👨‍👩‍👧</div>
+    <div class="stat-label">ימי משפחה</div>
+  </div>
+</div>
+
+<div class="section-title">⚡ פירוט יומי</div>
+
+
+  <div class="day-card" style="border-right-color:#4ade80">
+    <div class="day-header">
+      <div>
+        <span class="day-emoji">✨</span>
+        <span class="day-name"> 5/4</span>
+      </div>
+    </div>
+    <div class="tags"></div>
+    <div class="timeline"></div>
+  </div>
+
+<div class="footer">עודכן 11/04 12:42</div>
+
+</body>
+</html>
