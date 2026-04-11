@@ -448,6 +448,13 @@ def _save_to_notion(plan: dict) -> None:
     from notion_client import Client
     notion = Client(auth=NOTION_TOKEN)
 
+    # Debug: who is the integration connected to?
+    try:
+        me = notion.users.me()
+        print(f"Notion user: {me.get('name')} / {me.get('type')} / bot={me.get('bot',{})}")
+    except Exception as e:
+        print(f"Could not get notion user: {e}")
+
     # Resolve real DB id (handles page-id-as-db-id issue)
     db_id = _resolve_db_id(notion, ROTATION_DB_ID)
     print(f"Using DB ID: {db_id}")
@@ -456,6 +463,8 @@ def _save_to_notion(plan: dict) -> None:
         title_parts = db_info.get("title", [])
         db_name = title_parts[0]["plain_text"] if title_parts else "Unknown"
         print(f"DB name: {db_name}")
+        workspace = db_info.get("url", "")
+        print(f"DB url: {workspace}")
     except Exception as e:
         print(f"Could not get DB name: {e}")
 
