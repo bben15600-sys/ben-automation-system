@@ -44,6 +44,10 @@ WEEKLY_DB_ID = _clean(os.environ["WEEKLY_DB_ID"])
 DAYS_HE = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"]
 DAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
+# Fixed home-week schedule (update here if routine changes)
+LIHI_DAYS  = {"Tue", "Fri", "Sat"}   # שלישי שישי שבת
+TENNIS_DAYS = {"Wed", "Thu"}          # רביעי חמישי
+
 notion = Client(auth=NOTION_TOKEN)
 
 # ---------------------------------------------------------------------------
@@ -225,50 +229,49 @@ def build_home_day(
 ) -> dict:
     """Full entry for a home-week day."""
     has_basketball = day_en in basketball_days
-    has_vr = day_en in vr_days
+    has_tennis     = day_en in TENNIS_DAYS
+    has_lihi       = day_en in LIHI_DAYS
+    has_vr         = day_en in vr_days
 
-    # Defaults
-    morning = "קימה 09:30 — אוכל, התארגנות"
+    morning   = "קימה 09:30 — אוכל, התארגנות"
     afternoon = "עריכה / פרויקטים אישיים"
-    evening = "זמן חופשי"
-    lihi = False
-    family = False
-    editing = True
-    priority = "בינוני"
+    evening   = "זמן חופשי"
+    lihi      = has_lihi
+    family    = False
+    editing   = True
+    priority  = "בינוני"
 
-    # Basketball overrides evening
+    # Afternoon: tennis takes over editing time on tennis days
+    if has_tennis:
+        afternoon = "טניס"
+        editing = False
+
+    # Evening priority: basketball > VR > lihi > free
     if has_basketball:
         evening = "כדורסל 20:00–22:30"
-
-    # VR event overrides evening (takes priority over free time, not over basketball)
-    if has_vr and not has_basketball:
+    elif has_vr:
         evening = "אירוע VR — Enjoy VR"
+    elif has_lihi:
+        evening = "ליהי"
 
-    # Day-specific overrides
-    if day_index == 0:  # Sunday — start of home week
+    # Day-specific tweaks
+    if day_index == 0:      # Sunday — plan the week
         morning = "קימה 09:30 — אוכל, תכנון שבוע"
         priority = "דחוף"
-        if not has_basketball and not has_vr:
-            evening = "ליהי"
-            lihi = True
 
-    elif day_index == 5:  # Friday — family day
-        morning = "קימה 09:30 — ארוחת בוקר"
+    elif day_index == 5:    # Friday — ליהי + family
+        morning  = "קימה 09:30 — ארוחת בוקר"
         afternoon = "משפחה (אבא, סבא וסבתא)"
-        evening = "שבת — מנוחה"
-        family = True
-        editing = False
+        evening  = "ליהי"
+        family   = True
+        editing  = False
         priority = "בינוני"
-        lihi = False
 
-    elif day_index == 6:  # Saturday — rest
-        morning = "שינה / מנוחה"
+    elif day_index == 6:    # Saturday — slow morning, ליהי
+        morning  = "שינה / מנוחה"
         afternoon = "זמן חופשי"
-        editing = False
+        editing  = False
         priority = "גמיש"
-        if not has_basketball and not has_vr:
-            evening = "ליהי"
-            lihi = True
 
     return _page(
         day_he=day_he,

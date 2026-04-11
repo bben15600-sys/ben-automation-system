@@ -63,7 +63,9 @@ if __name__ == "__main__":
     next_sunday = this_sunday + timedelta(weeks=1)
 
     # ── Edit these lines to match your actual schedule ──────────────────────
+    # שבוע נוכחי — בסיס
     add_entry(this_sunday, week_type="Base", basketball_days=[])
+    # שבוע הבא — בית  (כדורסל: שני רביעי חמישי)
     add_entry(next_sunday, week_type="Home", basketball_days=["Mon", "Wed", "Thu"], vr_count=0)
     # ────────────────────────────────────────────────────────────────────────
 
