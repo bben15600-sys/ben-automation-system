@@ -50,6 +50,24 @@ notion = Client(auth=NOTION_TOKEN)
 # Helpers
 # ---------------------------------------------------------------------------
 
+def resolve_db_id(id_or_page: str) -> str:
+    """If given a page ID instead of a database ID, find the first child database."""
+    try:
+        notion.databases.retrieve(database_id=id_or_page)
+        return id_or_page  # already a valid database
+    except Exception:
+        pass
+    # It's a page — search its children for a database block
+    children = notion.blocks.children.list(block_id=id_or_page)
+    for block in children.get("results", []):
+        if block.get("type") == "child_database":
+            db_id = block["id"]
+            log.info("Resolved page %s → database %s (%s)",
+                     id_or_page, db_id, block["child_database"].get("title", ""))
+            return db_id
+    raise ValueError(f"No child database found inside page {id_or_page}")
+
+
 def get_week_start() -> date:
     """Return the Sunday that begins the current ISO week (Israel starts Sun)."""
     today = date.today()
@@ -250,6 +268,10 @@ def distribute_vr(basketball_days: list[str], vr_count: int) -> set[str]:
 # ---------------------------------------------------------------------------
 
 def generate_schedule(dry_run: bool = False) -> None:
+    global WEEKLY_DB_ID, ROTATION_DB_ID
+    WEEKLY_DB_ID = resolve_db_id(WEEKLY_DB_ID)
+    ROTATION_DB_ID = resolve_db_id(ROTATION_DB_ID)
+
     week_start = get_week_start()
     log.info("Generating schedule for week starting %s", week_start)
 
