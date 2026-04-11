@@ -271,8 +271,8 @@ class Planner:
     # ── Full questionnaire ────────────────────────────────────────────────────
 
     def run(self) -> dict | None:
-        next_sun = _get_next_sunday()
-        send(f"📅 <b>תכנון שבוע {next_sun.strftime('%d/%m')}</b>\n\nנתחיל! 🚀")
+        next_mon = _get_next_monday()
+        send(f"📅 <b>תכנון שבוע {next_mon.strftime('%d/%m')}</b>\n\nנתחיל! 🚀")
         time.sleep(1)
 
         p = self.plan
@@ -411,9 +411,9 @@ class Planner:
 
 # ── Notion ────────────────────────────────────────────────────────────────────
 
-def _get_next_sunday() -> date:
+def _get_next_monday() -> date:
     today = date.today()
-    diff  = (6 - today.weekday()) % 7
+    diff  = (7 - today.weekday()) % 7  # days until Monday
     return today + timedelta(days=diff if diff > 0 else 7)
 
 
@@ -483,38 +483,28 @@ def _save_to_notion(plan: dict) -> None:
     except Exception as e:
         print(f"WARNING: DB schema check/update failed: {e}")
 
-    next_sun  = _get_next_sunday()
-    week_end  = next_sun + timedelta(days=6)
+    next_mon  = _get_next_monday()
+    week_end  = next_mon + timedelta(days=7)  # Mon to next Mon (8 days)
 
     # Check if entry already exists
     try:
         existing = notion.databases.query(
             database_id=db_id,
             filter={"and": [
-                {"property": "Date", "date": {"on_or_after":  next_sun.isoformat()}},
+                {"property": "Date", "date": {"on_or_after":  next_mon.isoformat()}},
                 {"property": "Date", "date": {"on_or_before": week_end.isoformat()}},
             ]},
         )
         if existing.get("results"):
             page_id = existing["results"][0]["id"]
-            print(f"Entry already exists for {next_sun} — page ID: {page_id}")
-            print(f"Notion URL: https://notion.so/{page_id.replace('-','')}")
-            # Debug: check if page is archived and print parent
-            try:
-                page_info = notion.pages.retrieve(page_id=page_id)
-                print(f"Page archived: {page_info.get('archived', False)}")
-                parent = page_info.get("parent", {})
-                print(f"Page parent: {parent}")
-            except Exception as pe:
-                print(f"Could not retrieve page: {pe}")
-            print(f"Entry already exists for {next_sun} — updating Plan JSON…")
+            print(f"Entry already exists for {next_mon} — updating Plan JSON…")
             notion.pages.update(
                 page_id=page_id,
                 properties={
                     "Plan JSON": {"rich_text": [{"text": {"content": json.dumps(plan, ensure_ascii=False)[:2000]}}]},
                 }
             )
-            print(f"✅ Updated Plan JSON for {next_sun}")
+            print(f"✅ Updated Plan JSON for {next_mon}")
             return
     except Exception as e:
         print(f"WARNING: existing-entry query failed: {e}")
@@ -524,13 +514,12 @@ def _save_to_notion(plan: dict) -> None:
     ))
     plan_json_str = json.dumps(plan, ensure_ascii=False)
 
-    # Step 1: create page without Plan JSON (safe — only known fields)
     result = notion.pages.create(
         parent={"database_id": db_id},
         properties={
-            "Name":             {"title": [{"text": {"content": f"שבוע {next_sun.strftime('%d/%m')}"}}]},
+            "Name":             {"title": [{"text": {"content": f"שבוע {next_mon.strftime('%d/%m')}"}}]},
             "Week Type":        {"select": {"name": plan["week_type"]}},
-            "Date":             {"date": {"start": next_sun.isoformat()}},
+            "Date":             {"date": {"start": next_mon.isoformat()}},
             "Basketball Days":  {"multi_select": [{"name": d} for d in basketball_days]},
             "VR Events Count":  {"number": 0},
             "Schedule Created": {"checkbox": False},
@@ -539,14 +528,13 @@ def _save_to_notion(plan: dict) -> None:
     page_id = result["id"]
     print(f"✅ Page created: {page_id}")
 
-    # Step 2: update page with Plan JSON separately
     notion.pages.update(
         page_id=page_id,
         properties={
             "Plan JSON": {"rich_text": [{"text": {"content": plan_json_str[:2000]}}]},
         }
     )
-    print(f"✅ Plan JSON saved to Notion for week of {next_sun}")
+    print(f"✅ Plan JSON saved to Notion for week of {next_mon}")
 
 
 def _send_summary(plan: dict) -> None:
@@ -554,10 +542,10 @@ def _send_summary(plan: dict) -> None:
     bball   = " ".join(DAY_LABEL[d] for d in plan.get("basketball_days", [])) or "—"
     tennis  = " ".join(DAY_LABEL[d] for d in plan.get("tennis_days", []))  or "—"
     blocked = " ".join(DAY_LABEL[d] for d in plan.get("blocked_days", [])) or "—"
-    next_sun = _get_next_sunday()
+    next_mon = _get_next_monday()
 
     lines = [
-        f"✅ <b>שבוע {next_sun.strftime('%d/%m')} נשמר!</b>\n",
+        f"✅ <b>שבוע {next_mon.strftime('%d/%m')} נשמר!</b>\n",
         f"📋 סוג: <b>{'בית' if plan['week_type']=='Home' else 'בסיס'}</b>",
         f"💛 ליהי: {lihi}",
         f"🏀 כדורסל: {bball}",
@@ -567,7 +555,7 @@ def _send_summary(plan: dict) -> None:
         f"📖 ספר: {plan.get('book_min',0)} דק׳ ביום",
         f"⛔ חסומים: {blocked}",
         "",
-        "<i>לו\"ז מפורט ייווצר ביום ראשון בבוקר.</i>",
+        "<i>לו\"ז מפורט ייווצר ביום שני בבוקר.</i>",
     ]
     send("\n".join(lines))
 
