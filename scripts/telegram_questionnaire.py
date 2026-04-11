@@ -36,11 +36,18 @@ def send_message(text: str, parse_mode: str = "HTML") -> dict:
         "parse_mode": parse_mode,
     }).encode("utf-8")
     req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req) as resp:
-        return json.loads(resp.read())
+    try:
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8")
+        print(f"❌ HTTP {e.code}: {body}")
+        raise
 
 
 def main():
+    print(f"Token starts with: {TELEGRAM_BOT_TOKEN[:10]}...")
+    print(f"Chat ID: {TELEGRAM_CHAT_ID}")
     message = (
         "📅 <b>תכנון שבוע הבא</b>\n\n"
         "שלח תשובה בפורמט הבא:\n\n"
