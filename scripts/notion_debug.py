@@ -21,15 +21,12 @@ try:
 
     # Check if Rotation Schedule DB already exists under this page
     print("\nSearching for existing Rotation Schedule DB under this page...")
-    results = notion.search(
-        query="Rotation Schedule",
-        filter={"property": "object", "value": "database"}
-    )
+    results = notion.search(filter={"property": "object", "value": "database"})
     rotation_db_id = None
     for item in results.get("results", []):
         item_parent = item.get("parent", {})
-        if item_parent.get("page_id") == parent_page_id:
-            title = item.get("title", [{}])[0].get("plain_text", "")
+        title = item.get("title", [{}])[0].get("plain_text", "") if item.get("title") else ""
+        if item_parent.get("page_id") == parent_page_id and "rotation" in title.lower():
             print(f"  Found existing: {item['id']} '{title}'")
             rotation_db_id = item["id"]
 
