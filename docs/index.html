@@ -3,168 +3,295 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>לוז שבועי — 5/4 – 11/4/2026</title>
+<title>הלוז שלי — 6/4 – 13/4/2026</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: #0d0d14;
+    background: #0a0a12;
     color: #e2e2e8;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
     direction: rtl;
     min-height: 100vh;
-    padding: 0 0 40px;
+    padding-bottom: 48px;
   }
 
   /* ── Header ── */
   .header {
-    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 100%);
-    padding: 28px 20px 20px;
+    background: linear-gradient(160deg, #12122a 0%, #0d0d1e 100%);
+    padding: 40px 20px 28px;
     text-align: center;
-    border-bottom: 1px solid #ffffff10;
+  }
+  .header-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #7c3aed22, #db277722);
+    border: 1px solid #7c3aed44;
+    border-radius: 99px;
+    padding: 6px 20px;
+    font-size: 12px;
+    color: #c4b5fd;
+    margin-bottom: 18px;
+    letter-spacing: 3px;
   }
   .header-title {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
+    font-size: 44px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #c084fc 0%, #f472b6 50%, #fb923c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    margin-bottom: 12px;
   }
   .header-sub {
-    color: #888;
-    font-size: 13px;
-    margin-top: 4px;
+    color: #6b7280;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
+  .header-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
 
-  /* ── Stat cards ── */
+  /* ── Stats grid ── */
   .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 16px;
+    gap: 12px;
+    padding: 20px 16px 0;
   }
   .stat-card {
-    background: #1a1a2a;
-    border-radius: 14px;
-    padding: 14px 12px;
+    background: #12122a;
+    border-radius: 18px;
+    padding: 20px 14px;
     text-align: center;
+    border: 1px solid #ffffff08;
   }
-  .stat-num  { font-size: 34px; font-weight: 800; line-height: 1; }
-  .stat-emoji { font-size: 20px; margin: 4px 0; }
-  .stat-label { font-size: 12px; color: #aaa; }
+  .stat-num   { font-size: 42px; font-weight: 900; line-height: 1; }
+  .stat-emoji { font-size: 22px; margin: 6px 0 4px; }
+  .stat-label { font-size: 12px; color: #9ca3af; }
+
+  /* ── Weekly breakdown ── */
+  .breakdown {
+    margin: 14px 16px 0;
+    background: #12122a;
+    border-radius: 18px;
+    padding: 18px 16px;
+    border: 1px solid #ffffff08;
+  }
+  .breakdown-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #e2e2e8;
+    margin-bottom: 16px;
+  }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-label { font-size: 13px; color: #d1d5db; min-width: 90px; text-align: right; }
+  .bar-track {
+    flex: 1;
+    height: 6px;
+    background: #1f2937;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #db2777);
+    border-radius: 99px;
+  }
+  .bar-val { font-size: 12px; color: #6b7280; min-width: 60px; text-align: left; direction: ltr; }
 
   /* ── Section title ── */
   .section-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #888;
-    padding: 8px 20px 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #4b5563;
+    padding: 20px 20px 8px;
+    letter-spacing: 2px;
     text-transform: uppercase;
-    letter-spacing: 1px;
   }
 
   /* ── Day cards ── */
   .day-card {
-    background: #1a1a2a;
-    border-radius: 16px;
+    background: #12122a;
+    border-radius: 20px;
     margin: 8px 16px;
-    border-right: 4px solid #555;
+    border: 1px solid #ffffff08;
     overflow: hidden;
   }
   .day-header {
-    padding: 14px 16px 6px;
+    padding: 14px 14px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-  }
-  .day-emoji { font-size: 18px; margin-left: 8px; }
-  .day-name  { font-size: 18px; font-weight: 700; }
-
-  /* ── Tags ── */
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 16px 10px; }
-  .tag {
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  /* ── Timeline ── */
-  .timeline { padding: 4px 16px 16px; }
-  .tl-item {
-    display: flex;
     gap: 10px;
-    margin-bottom: 4px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
-  .tl-left {
+  .day-toggle {
+    font-size: 11px;
+    color: #4b5563;
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+    width: 16px;
+    text-align: center;
+  }
+  .day-toggle.open { transform: rotate(180deg); }
+  .day-type-tag {
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .day-name-wrap {
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .day-name  { font-size: 20px; font-weight: 800; }
+  .day-date  { font-size: 12px; color: #6b7280; }
+  .day-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  /* ── Day body & items ── */
+  .day-body { overflow: hidden; }
+  .day-body.collapsed { display: none; }
+  .day-item {
+    padding: 10px 14px;
+    border-top: 1px solid #ffffff06;
     display: flex;
     flex-direction: column;
+    gap: 5px;
+  }
+  .item-main {
+    display: flex;
     align-items: center;
-    width: 12px;
-    flex-shrink: 0;
-    padding-top: 5px;
+    gap: 8px;
   }
-  .tl-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
+  .item-text { flex: 1; font-size: 14px; font-weight: 500; line-height: 1.4; }
+  .item-icon { font-size: 18px; flex-shrink: 0; }
+  .item-time { font-size: 12px; color: #6b7280; direction: ltr; white-space: nowrap; flex-shrink: 0; }
+  .item-tag  {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    width: fit-content;
   }
-  .tl-line {
-    width: 2px;
-    flex: 1;
-    background: #2a2a3a;
-    min-height: 14px;
-    margin: 2px 0;
-  }
-  .tl-body  { flex: 1; padding-bottom: 10px; }
-  .tl-row   { display: flex; align-items: baseline; gap: 6px; }
-  .tl-icon  { font-size: 15px; flex-shrink: 0; }
-  .tl-text  { font-size: 14px; font-weight: 500; line-height: 1.4; }
-  .tl-time  { font-size: 11px; color: #666; margin-top: 2px; }
 
   /* ── Footer ── */
   .footer {
     text-align: center;
-    color: #444;
-    font-size: 12px;
-    padding: 24px 16px 0;
+    color: #374151;
+    font-size: 11px;
+    padding: 28px 16px 0;
   }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="header-title">📅 לוז שבועי</div>
-  <div class="header-sub">5/4 – 11/4/2026</div>
+  <div class="header-pill">📅 ה ל ו ז  ה א י ש י  ש ל י</div>
+  <div class="header-title">השבוע שלי</div>
+  <div class="header-sub">
+    <div class="header-dot"></div>
+    1 ימים · מאורגן ומוכן
+  </div>
 </div>
 
 <div class="stats-grid">
 
-  <div class="stat-card" style="border-top:3px solid #fb923c">
-    <div class="stat-num" style="color:#fb923c">0</div>
-    <div class="stat-emoji">🏀</div>
-    <div class="stat-label">אימוני כדורסל</div>
-  </div>
-  <div class="stat-card" style="border-top:3px solid #c084fc">
-    <div class="stat-num" style="color:#c084fc">0</div>
-    <div class="stat-emoji">💛</div>
-    <div class="stat-label">ימים עם ליהי</div>
-  </div>
-  <div class="stat-card" style="border-top:3px solid #34d399">
-    <div class="stat-num" style="color:#34d399">0</div>
-    <div class="stat-emoji">🎬</div>
-    <div class="stat-label">ימי עריכה</div>
-  </div>
-  <div class="stat-card" style="border-top:3px solid #f472b6">
-    <div class="stat-num" style="color:#f472b6">0</div>
-    <div class="stat-emoji">👨‍👩‍👧</div>
-    <div class="stat-label">ימי משפחה</div>
-  </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#fb923c">0</div>
+      <div class="stat-emoji">🏀</div>
+      <div class="stat-label">אימוני כדורסל</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#34d399">0</div>
+      <div class="stat-emoji">🎬</div>
+      <div class="stat-label">שעות עריכה</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#f472b6">0</div>
+      <div class="stat-emoji">❤️</div>
+      <div class="stat-label">ימים עם ליהי</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#60a5fa">—</div>
+      <div class="stat-emoji">🥽</div>
+      <div class="stat-label">אירועי VR</div>
+    </div>
+</div>
+
+<div class="breakdown">
+  <div class="breakdown-title">⚡ פירוט שבועי</div>
+
+    <div class="bar-row">
+      <div class="bar-label">🏀 כדורסל</div>
+      <div class="bar-track"><div class="bar-fill" style="width:0%"></div></div>
+      <div class="bar-val">~0 שעות</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">🎬 עריכה</div>
+      <div class="bar-track"><div class="bar-fill" style="width:0%"></div></div>
+      <div class="bar-val">~0 שעות</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">❤️ משפחה ואנשים אהובים</div>
+      <div class="bar-track"><div class="bar-fill" style="width:0%"></div></div>
+      <div class="bar-val">~0 שעות</div>
+    </div>
 </div>
 
 <div class="section-title">⚡ פירוט יומי</div>
 
 
+  <div class="day-card" id="day-0">
+    <div class="day-header" onclick="toggleDay('day-0')">
+      <span class="day-toggle" id="arr-day-0">▼</span>
+      <span class="day-type-tag" style="color:#6b7280;background:#1f2937">יום רגיל</span>
+      <div class="day-name-wrap">
+        <span class="day-name">ראשון</span>
+        <span class="day-date"> 12/4</span>
+      </div>
+      <div class="day-icon-box" style="background:linear-gradient(135deg,#374151,#1f2937)">✨</div>
+    </div>
+    <div class="day-body" id="body-day-0">
 
-<div class="footer">עודכן 11/04 23:25</div>
+    </div>
+  </div>
+
+<div class="footer">עודכן 11/04 23:26</div>
+
+<script>
+function toggleDay(id) {
+  var body = document.getElementById('body-' + id);
+  var arr  = document.getElementById('arr-' + id);
+  if (!body) return;
+  body.classList.toggle('collapsed');
+  arr.classList.toggle('open');
+}
+</script>
 
 </body>
 </html>
