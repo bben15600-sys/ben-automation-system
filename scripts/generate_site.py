@@ -28,6 +28,25 @@ WEEKLY_DB_ID = _clean(os.environ["WEEKLY_DB_ID"])
 from notion_client import Client
 notion = Client(auth=NOTION_TOKEN)
 
+
+def resolve_db_id(id_or_page: str) -> str:
+    """If given a page ID instead of a DB ID, search for Weekly Schedule DB."""
+    try:
+        notion.databases.retrieve(database_id=id_or_page)
+        return id_or_page
+    except Exception:
+        pass
+    results = notion.search(filter={"property": "object", "value": "database"})
+    for db in results.get("results", []):
+        title_parts = db.get("title", [])
+        name = title_parts[0]["plain_text"] if title_parts else ""
+        if "weekly" in name.lower() or "schedule" in name.lower() or "שבועי" in name:
+            return db["id"]
+    raise ValueError(f"Could not resolve {id_or_page!r} to a Weekly Schedule database.")
+
+
+WEEKLY_DB_ID = resolve_db_id(WEEKLY_DB_ID)
+
 DAYS_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 DAYS_HE    = {"Sun": "ראשון", "Mon": "שני",  "Tue": "שלישי",
               "Wed": "רביעי", "Thu": "חמישי", "Fri": "שישי", "Sat": "שבת"}
