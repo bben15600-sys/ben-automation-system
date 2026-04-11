@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """
-telegram_collect.py — Polls Telegram for weekly plan response, writes to Rotation DB.
+telegram_collect.py — Parses the filled weekly questionnaire and writes to Rotation DB.
+Stores full Plan JSON so weekly_scheduler.py can build a smart daily schedule.
 
-Parses a comprehensive weekly plan template and stores it as JSON in the
-Rotation DB so weekly_scheduler.py can build a smart daily schedule.
-
-Required env vars:
-    TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, NOTION_TOKEN, ROTATION_DB_ID
+Required env vars: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, NOTION_TOKEN, ROTATION_DB_ID
 """
 
 import os
@@ -41,7 +38,7 @@ HE_TO_EN = {
     "רביעי": "Wed", "חמישי": "Thu", "שישי": "Fri", "שבת": "Sat",
 }
 
-# ── Telegram helpers ──────────────────────────────────────────────────────────
+# ── Telegram ──────────────────────────────────────────────────────────────────
 
 def tg_get(method: str, params: dict = None) -> dict:
     url = f"{TELEGRAM_API}/{method}"
@@ -66,7 +63,6 @@ def send_message(text: str, parse_mode: str = "HTML") -> None:
 
 
 def get_recent_response(max_age_seconds: int = 7200) -> str | None:
-    """Return the most recent message that looks like a plan response."""
     updates = tg_get("getUpdates", {"limit": 30, "allowed_updates": "message"})
     if not updates.get("ok"):
         return None
@@ -85,7 +81,7 @@ def get_recent_response(max_age_seconds: int = 7200) -> str | None:
 # ── Parser ────────────────────────────────────────────────────────────────────
 
 def parse_days(val: str) -> list[str]:
-    """Convert Hebrew (or English) day names to English 3-letter codes."""
+    """'שני,חמישי' → ['Mon', 'Thu']"""
     if val.strip() in ("—", "לא", "", "-", "אין"):
         return []
     days = []
@@ -93,95 +89,129 @@ def parse_days(val: str) -> list[str]:
         part = part.strip()
         if part in HE_TO_EN:
             days.append(HE_TO_EN[part])
-        elif part in ("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"):
+        elif part in ("Sun","Mon","Tue","Wed","Thu","Fri","Sat"):
             days.append(part)
     return days
 
 
 def parse_int(val: str, default: int = 0) -> int:
-    try:
-        return int(re.sub(r'\D', '', val) or str(default))
-    except ValueError:
-        return default
+    digits = re.sub(r'\D', '', val)
+    return int(digits) if digits else default
+
+
+def parse_activities(val: str) -> list[str]:
+    if val.strip() in ("—", "לא", "", "-"):
+        return []
+    return [a.strip() for a in re.split(r"[,،]", val) if a.strip()]
 
 
 def parse_response(text: str) -> dict:
-    """Parse filled-in questionnaire template into a structured plan dict."""
+    """Parse the filled questionnaire into a structured plan dict."""
     plan: dict = {
-        "week_type":           "Home",
-        "lihi_days":           ["Tue", "Fri", "Sat"],
-        "basketball_days":     [],
-        "work_days":           [],
-        "course_view_min":     0,
-        "course_practice_min": 0,
-        "system_min":          0,
-        "dad_days":            [],
-        "grandparents_days":   [],
-        "friends_count":       0,
-        "blocked_days":        [],
-        "notes":               "",
+        "week_type":            "Home",
+        # Lihi — per type
+        "lihi_ערב":             [],
+        "lihi_יום-מלא":        [],
+        "lihi_לינה":           [],
+        "lihi_יציאה":          [],
+        # Basketball
+        "basketball_fixed":     [],
+        "basketball_optional":  [],
+        # Tennis
+        "tennis_days":          [],
+        # Course
+        "course_view_min":      0,
+        "course_practice_min":  0,
+        # System work
+        "system_min":           0,
+        "system_type":          "",
+        # Work
+        "work_משמרת":          [],
+        "work_ספונטנית":        [],
+        # Family
+        "dad_ערב":              [],
+        "dad_מפגש":            [],
+        "grandparents_days":    [],
+        # Friends
+        "friends_ערב":         [],
+        "friends_קפה":          [],
+        # Personal
+        "personal_activities":  [],
+        "book_min":             0,
+        # Other
+        "blocked_days":         [],
+        "notes":                "",
     }
 
     for line in text.splitlines():
         line = line.strip()
-        if ":" not in line:
+        if not line or line.startswith("--") or ":" not in line:
             continue
         key, _, val = line.partition(":")
         key = key.strip()
         val = val.strip()
 
-        if key == "סוג":
-            plan["week_type"] = "Home" if "בית" in val else "Base"
-        elif key == "ליהי":
-            plan["lihi_days"] = parse_days(val)
-        elif key == "כדורסל":
-            plan["basketball_days"] = parse_days(val)
-        elif key == "עבודה":
-            plan["work_days"] = parse_days(val)
-        elif key == "קורס-צפייה":
-            plan["course_view_min"] = parse_int(val)
-        elif key == "קורס-תרגול":
-            plan["course_practice_min"] = parse_int(val)
-        elif key == "מערכת":
-            plan["system_min"] = parse_int(val)
-        elif key == "אבא":
-            plan["dad_days"] = parse_days(val)
-        elif key == "סבא":
-            plan["grandparents_days"] = parse_days(val)
-        elif key == "חברים":
-            plan["friends_count"] = parse_int(val)
-        elif key == "חסומים":
-            plan["blocked_days"] = parse_days(val)
-        elif key == "הערות":
-            plan["notes"] = val
+        if   key == "סוג":               plan["week_type"]           = "Home" if "בית" in val else "Base"
+        elif key == "ליהי-ערב":          plan["lihi_ערב"]             = parse_days(val)
+        elif key == "ליהי-יום-מלא":      plan["lihi_יום-מלא"]        = parse_days(val)
+        elif key == "ליהי-לינה":         plan["lihi_לינה"]            = parse_days(val)
+        elif key == "ליהי-יציאה":        plan["lihi_יציאה"]           = parse_days(val)
+        elif key == "כדורסל":            plan["basketball_fixed"]     = parse_days(val)
+        elif key == "כדורסל-אופציונלי":  plan["basketball_optional"]  = parse_days(val)
+        elif key == "טניס":              plan["tennis_days"]          = parse_days(val)
+        elif key == "קורס-צפייה":        plan["course_view_min"]      = parse_int(val)
+        elif key == "קורס-תרגול":        plan["course_practice_min"]  = parse_int(val)
+        elif key == "מערכת":             plan["system_min"]           = parse_int(val)
+        elif key == "מערכת-סוג":         plan["system_type"]          = val
+        elif key == "עבודה-משמרת":       plan["work_משמרת"]           = parse_days(val)
+        elif key == "עבודה-ספונטנית":    plan["work_ספונטנית"]        = parse_days(val)
+        elif key == "אבא-ערב":           plan["dad_ערב"]              = parse_days(val)
+        elif key == "אבא-מפגש":          plan["dad_מפגש"]             = parse_days(val)
+        elif key == "סבא":               plan["grandparents_days"]    = parse_days(val)
+        elif key == "חברים-ערב":         plan["friends_ערב"]          = parse_days(val)
+        elif key == "חברים-קפה":         plan["friends_קפה"]          = parse_days(val)
+        elif key == "עצמי":              plan["personal_activities"]  = parse_activities(val)
+        elif key == "ספר":               plan["book_min"]             = parse_int(val)
+        elif key == "חסומים":            plan["blocked_days"]         = parse_days(val)
+        elif key == "הערות":             plan["notes"]                = val
+
+    # Computed convenience fields used by scheduler
+    plan["lihi_days"]       = list(dict.fromkeys(
+        plan["lihi_ערב"] + plan["lihi_יום-מלא"] + plan["lihi_לינה"] + plan["lihi_יציאה"]
+    ))
+    plan["basketball_days"] = list(dict.fromkeys(
+        plan["basketball_fixed"] + plan["basketball_optional"]
+    ))
+    plan["work_days"]       = list(dict.fromkeys(
+        plan["work_משמרת"] + plan["work_ספונטנית"]
+    ))
+    plan["dad_days"]        = list(dict.fromkeys(plan["dad_ערב"] + plan["dad_מפגש"]))
 
     return plan
 
-# ── Notion helpers ────────────────────────────────────────────────────────────
+# ── Notion ────────────────────────────────────────────────────────────────────
 
 def get_next_sunday() -> date:
     today = date.today()
-    days_until_sunday = (6 - today.weekday()) % 7
-    return today + timedelta(days=days_until_sunday if days_until_sunday > 0 else 7)
+    diff = (6 - today.weekday()) % 7
+    return today + timedelta(days=diff if diff > 0 else 7)
 
 
 def ensure_plan_json_field() -> None:
-    """Add 'Plan JSON' rich_text property to Rotation DB if missing."""
     try:
         notion.databases.update(
             database_id=ROTATION_DB_ID,
             properties={"Plan JSON": {"rich_text": {}}}
         )
-        print("✅ Plan JSON field ensured in Rotation DB.")
     except Exception as e:
-        print(f"⚠️ Could not update DB schema: {e}")
+        print(f"⚠️ DB schema update: {e}")
 
 
 def entry_exists(week_start: date) -> bool:
     res = notion.databases.query(
         database_id=ROTATION_DB_ID,
         filter={"and": [
-            {"property": "Date", "date": {"on_or_after": week_start.isoformat()}},
+            {"property": "Date", "date": {"on_or_after":  week_start.isoformat()}},
             {"property": "Date", "date": {"on_or_before": (week_start + timedelta(days=6)).isoformat()}},
         ]},
     )
@@ -192,9 +222,6 @@ def create_rotation_entry(week_start: date, plan: dict) -> None:
     if entry_exists(week_start):
         print(f"Entry already exists for {week_start} — skipping.")
         return
-
-    plan_json_str = json.dumps(plan, ensure_ascii=False)
-
     notion.pages.create(
         parent={"database_id": ROTATION_DB_ID},
         properties={
@@ -204,7 +231,7 @@ def create_rotation_entry(week_start: date, plan: dict) -> None:
             "Basketball Days":  {"multi_select": [{"name": d} for d in plan["basketball_days"]]},
             "VR Events Count":  {"number": 0},
             "Schedule Created": {"checkbox": False},
-            "Plan JSON":        {"rich_text": [{"text": {"content": plan_json_str}}]},
+            "Plan JSON":        {"rich_text": [{"text": {"content": json.dumps(plan, ensure_ascii=False)}}]},
         },
     )
     print(f"✅ Rotation entry created for {week_start}")
@@ -212,22 +239,14 @@ def create_rotation_entry(week_start: date, plan: dict) -> None:
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    print("🔍 Polling Telegram for weekly plan response…")
-    response_text = get_recent_response(max_age_seconds=7200)
+    print("🔍 Polling Telegram…")
+    text = get_recent_response(max_age_seconds=7200)
 
-    if not response_text:
-        send_message(
-            "⚠️ לא התקבלה תשובה.\n\n"
-            "מלא ושלח:\n\n"
-            "<pre>סוג: בית\nליהי: שלישי,שישי,שבת\n"
-            "כדורסל: שני,רביעי,חמישי\nעבודה: —\n"
-            "קורס-צפייה: 90\nקורס-תרגול: 60\nמערכת: 60\n"
-            "אבא: שישי\nסבא: לא\nחברים: 0\nחסומים: —\nהערות: </pre>"
-        )
+    if not text:
+        send_message("⚠️ לא התקבלה תשובה. שלח את הטמפלייט המלא ואז הפעל מחדש את ה-workflow.")
         sys.exit(1)
 
-    print("📨 Response received.")
-    plan = parse_response(response_text)
+    plan = parse_response(text)
     print(f"📋 Plan: {json.dumps(plan, ensure_ascii=False, indent=2)}")
 
     next_sunday = get_next_sunday()
@@ -236,15 +255,18 @@ def main():
 
     lihi_he  = ", ".join(plan["lihi_days"])       or "—"
     bball_he = ", ".join(plan["basketball_days"]) or "—"
+    tennis_he = ", ".join(plan["tennis_days"])    or "—"
 
     send_message(
         f"✅ <b>שבוע {next_sunday.strftime('%d/%m')} נשמר!</b>\n\n"
         f"📋 סוג: <b>{'בית' if plan['week_type'] == 'Home' else 'בסיס'}</b>\n"
         f"💛 ליהי: {lihi_he}\n"
         f"🏀 כדורסל: {bball_he}\n"
+        f"🎾 טניס: {tennis_he}\n"
         f"🎬 קורס צפייה: {plan['course_view_min']} דק׳\n"
         f"🎬 קורס תרגול: {plan['course_practice_min']} דק׳\n"
-        f"💻 מערכת: {plan['system_min']} דק׳\n\n"
+        f"💻 מערכת: {plan['system_min']} דק׳ ({plan['system_type'] or '—'})\n"
+        f"📖 ספר: {plan['book_min']} דק׳\n\n"
         f"<i>לו\"ז מפורט ייווצר ביום ראשון בבוקר.</i>"
     )
     print("Done.")
