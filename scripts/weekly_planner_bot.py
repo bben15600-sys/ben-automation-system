@@ -451,6 +451,13 @@ def _save_to_notion(plan: dict) -> None:
     # Resolve real DB id (handles page-id-as-db-id issue)
     db_id = _resolve_db_id(notion, ROTATION_DB_ID)
     print(f"Using DB ID: {db_id}")
+    try:
+        db_info = notion.databases.retrieve(database_id=db_id)
+        title_parts = db_info.get("title", [])
+        db_name = title_parts[0]["plain_text"] if title_parts else "Unknown"
+        print(f"DB name: {db_name}")
+    except Exception as e:
+        print(f"Could not get DB name: {e}")
 
     # Ensure "Plan JSON" rich_text property exists in the DB schema
     try:
