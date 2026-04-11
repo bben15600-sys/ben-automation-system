@@ -28,3 +28,17 @@ jobs:
           ROTATION_DB_ID: ${{ secrets.ROTATION_DB_ID }}
           WEEKLY_DB_ID: ${{ secrets.WEEKLY_DB_ID }}
         run: python scripts/weekly_scheduler.py
+
+      - name: Generate schedule website
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          WEEKLY_DB_ID: ${{ secrets.WEEKLY_DB_ID }}
+        run: python scripts/generate_site.py
+
+      - name: Deploy to GitHub Pages
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+          git diff --cached --quiet || git commit -m "Deploy weekly schedule site [skip ci]"
+          git push origin master
