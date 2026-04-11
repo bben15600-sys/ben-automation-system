@@ -37,7 +37,7 @@ def _clean(val: str) -> str:
     return _re.sub(r'\s', '', val)
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"].strip()
-ROTATION_DB_ID = _clean(os.environ.get("ROTATION_DB_ID", "ac656f74-60b6-41a3-adc2-49e6656c3845"))
+ROTATION_DB_ID = _clean(os.environ.get("ROTATION_DB_ID", "29d51fc8-512b-4415-97c8-67121564b4f2"))
 WEEKLY_DB_ID = _clean(os.environ["WEEKLY_DB_ID"])
 
 # Hebrew day names (Sun–Sat) and matching Notion select values
