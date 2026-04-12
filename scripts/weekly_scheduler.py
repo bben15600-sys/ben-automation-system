@@ -431,10 +431,6 @@ def generate_schedule(dry_run: bool = False) -> None:
     log.info("Week type: %s | Basketball: %s | VR: %d | Plan JSON: %s",
              week_type, basketball_days_raw, vr_count, bool(plan.get("course_view_min")))
 
-    if already_created and not dry_run:
-        log.info("Rotation entry already marked as created — skipping.")
-        return
-
     vr_days    = distribute_vr(basketball_days_raw, vr_count) if week_type == "Home" else set()
     assignments = assign_activities(plan) if week_type == "Home" else {}
 
