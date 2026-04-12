@@ -263,6 +263,12 @@ TIME_LABELS = {
 }
 
 
+def _time_mins(t: str) -> int:
+    """'HH:MM' → minutes since midnight for sorting. Returns 9999 if unparseable."""
+    m = re.match(r'^(\d{1,2}):(\d{2})', t.strip())
+    return int(m.group(1)) * 60 + int(m.group(2)) if m else 9999
+
+
 def build_items(e: dict) -> list[dict]:
     items = []
     for slot in ["morning", "afternoon", "evening"]:
@@ -312,6 +318,9 @@ def build_items(e: dict) -> list[dict]:
 
     if e["notes"]:
         items.append({"icon": "📝", "text": e["notes"], "time": "", "category": "כללי"})
+
+    # Sort all items by time so cross-block ordering is correct
+    items.sort(key=lambda i: _time_mins(i["time"]))
 
     return items
 

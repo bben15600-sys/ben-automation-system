@@ -395,20 +395,30 @@ def build_home_day(
 
         # ── Morning ───────────────────────────────────────────────────────────
         m = [f"{wake} — ☀️ קימה + ארוחת בוקר"]
+        morning_end = "12:30"   # track when morning activities finish
         if has_work and work_time_of_day == "בוקר":
             ws = work_start if work_start else act
             we_str = f"–{work_end}" if work_end else ""
             m.append(f"{ws} — 💼 עבודה{' — ' + work_label if work_label else ''}{we_str}")
+            if work_end:
+                morning_end = work_end
         elif has_cv and course_view_time == "בוקר":
+            cv_end = _time_add(act, cv_min)
             m.append(f"{act} — 🎬 קורס צפייה ({cv_min} דק׳)")
-            m.append(f"{_time_add(act, cv_min)} — ☕ הפסקה")
+            m.append(f"{cv_end} — ☕ הפסקה")
+            morning_end = cv_end
         elif has_sys and system_time == "בוקר":
+            sys_end = _time_add(act, sys_min)
             m.append(f"{act} — 💻 מערכת ({sys_min} דק׳)")
-            m.append(f"{_time_add(act, sys_min)} — ☕ הפסקה")
+            m.append(f"{sys_end} — ☕ הפסקה")
+            morning_end = sys_end
         morning = "\n".join(m)
 
+        # Lunch starts at 12:30, or after morning activities if they run late
+        lunch_time = morning_end if morning_end > "12:30" else "12:30"
+
         # ── Afternoon ─────────────────────────────────────────────────────────
-        a = ["12:30 — 🍽 ארוחת צהריים"]
+        a = [f"{lunch_time} — 🍽 ארוחת צהריים"]
         if has_work and work_time_of_day == "צהריים":
             ws = work_start if work_start else "13:00"
             we_str = f"–{work_end}" if work_end else ""
