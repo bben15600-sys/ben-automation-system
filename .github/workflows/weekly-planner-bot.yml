@@ -56,20 +56,29 @@ jobs:
           git diff --cached --quiet || git commit -m "Deploy weekly schedule site [skip ci]"
           git push origin master
 
-      # ── Step 5: Send Telegram link ────────────────────────────────────────
-      - name: "5 · שליחת קישור לאתר בטלגרם"
+      # ── Step 5: Wait for GitHub Pages to deploy ───────────────────────────
+      - name: "5 · המתנה לפריסת GitHub Pages"
+        run: |
+          echo "Waiting 120s for GitHub Pages CDN to propagate…"
+          sleep 120
+          echo "✅ Done waiting"
+
+      # ── Step 6: Send Telegram link ────────────────────────────────────────
+      - name: "6 · שליחת קישור לאתר בטלגרם"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python - <<'EOF'
-          import os, json, urllib.request
+          import os, json, time, urllib.request
           token   = os.environ["TELEGRAM_BOT_TOKEN"].strip().replace(" ", "").replace("\n", "")
           chat_id = os.environ["TELEGRAM_CHAT_ID"].strip().replace(" ", "").replace("\n", "")
           url     = f"https://api.telegram.org/bot{token}/sendMessage"
+          ts      = int(time.time())
+          site    = f"https://bben15600-sys.github.io/ben-automation-system/?t={ts}"
           msg = (
             "📅 <b>הלוז שלך לשבוע הבא מוכן!</b>\n\n"
-            "🔗 <a href='https://bben15600-sys.github.io/ben-automation-system/'>לחץ כאן לצפייה</a>\n\n"
+            f"🔗 <a href='{site}'>לחץ כאן לצפייה</a>\n\n"
             "<i>הלוז מתעדכן אוטומטית כל שבוע לפי תשובותיך.</i>"
           )
           payload = json.dumps({
