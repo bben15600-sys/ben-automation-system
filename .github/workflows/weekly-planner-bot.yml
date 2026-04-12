@@ -1,4 +1,4 @@
-name: Weekly Planner Bot
+name: Weekly Planner → Notion → Site → Telegram
 
 on:
   schedule:
@@ -6,21 +6,80 @@ on:
     - cron: "0 17 * * 0"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  run-bot:
+  weekly-flow:
     runs-on: ubuntu-latest
-    timeout-minutes: 30   # allow up to 30 min for interactive session
+    timeout-minutes: 45   # 25 min for bot + buffer for rest of steps
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - run: pip install -r requirements.txt
-      - name: Run interactive planner bot
+
+      # ── Step 1: Interactive planner bot (waits for user answers) ──────────
+      - name: "1 · שאלון שבועי — טלגרם"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
           NOTION_TOKEN:       ${{ secrets.NOTION_TOKEN }}
           ROTATION_DB_ID:     ${{ secrets.ROTATION_DB_ID }}
         run: python scripts/weekly_planner_bot.py
+
+      # ── Step 2: Build weekly schedule in Notion ───────────────────────────
+      - name: "2 · יצירת לוז שבועי ב-Notion"
+        env:
+          NOTION_TOKEN:    ${{ secrets.NOTION_TOKEN }}
+          ROTATION_DB_ID:  ${{ secrets.ROTATION_DB_ID }}
+          WEEKLY_DB_ID:    ${{ secrets.WEEKLY_DB_ID }}
+        run: python scripts/weekly_scheduler.py
+
+      # ── Step 3: Generate site HTML ────────────────────────────────────────
+      - name: "3 · יצירת אתר הלוז"
+        env:
+          NOTION_TOKEN:  ${{ secrets.NOTION_TOKEN }}
+          WEEKLY_DB_ID:  ${{ secrets.WEEKLY_DB_ID }}
+        run: python scripts/generate_site.py
+
+      # ── Step 4: Deploy to GitHub Pages ────────────────────────────────────
+      - name: "4 · פריסה ל-GitHub Pages"
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+          git diff --cached --quiet || git commit -m "Deploy weekly schedule site [skip ci]"
+          git push origin master
+
+      # ── Step 5: Send Telegram link ────────────────────────────────────────
+      - name: "5 · שליחת קישור לאתר בטלגרם"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'EOF'
+          import os, json, urllib.request
+          token   = os.environ["TELEGRAM_BOT_TOKEN"].strip().replace(" ", "").replace("\n", "")
+          chat_id = os.environ["TELEGRAM_CHAT_ID"].strip().replace(" ", "").replace("\n", "")
+          url     = f"https://api.telegram.org/bot{token}/sendMessage"
+          msg = (
+            "📅 <b>הלוז שלך לשבוע הבא מוכן!</b>\n\n"
+            "🔗 <a href='https://bben15600-sys.github.io/ben-automation-system/'>לחץ כאן לצפייה</a>\n\n"
+            "<i>הלוז מתעדכן אוטומטית כל שבוע לפי תשובותיך.</i>"
+          )
+          payload = json.dumps({
+            "chat_id": chat_id,
+            "text": msg,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": False,
+          }).encode()
+          req = urllib.request.Request(url, data=payload,
+                                       headers={"Content-Type": "application/json"})
+          urllib.request.urlopen(req)
+          print("✅ Telegram link sent")
+          EOF
