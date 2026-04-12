@@ -128,6 +128,38 @@ def kb_minutes(values: list) -> list:
     return [[{"text": (str(m) + " דק׳") if m else "דלג", "callback_data": f"m:{m}"}
              for m in values]]
 
+
+def kb_wake() -> list:
+    """Wake time keyboard — 3 per row, 05:30–11:00."""
+    times = ["05:30","06:00","06:30","07:00","07:30","08:00",
+             "08:30","09:00","09:30","10:00","10:30","11:00"]
+    rows, row = [], []
+    for t in times:
+        row.append({"text": t, "callback_data": f"c:{t}"})
+        if len(row) == 3:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    return rows
+
+
+def kb_time() -> list:
+    """Activity time keyboard — 3 per row, 07:00–00:00."""
+    times = ["07:00","08:00","09:00","10:00","11:00","12:00",
+             "13:00","14:00","15:00","16:00","17:00","18:00",
+             "19:00","19:30","20:00","20:30","21:00","21:30",
+             "22:00","22:30","23:00","23:30","00:00"]
+    rows, row = [], []
+    for t in times:
+        row.append({"text": t, "callback_data": f"c:{t}"})
+        if len(row) == 3:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    return rows
+
 # ── Planner session ───────────────────────────────────────────────────────────
 
 class Planner:
@@ -154,14 +186,30 @@ class Planner:
             "work_days":            [],
             "work_type":            "",
             "work_time_of_day":     "בוקר",
-            "wake_time_work":       "07:00",
-            "wake_time_free":       "09:30",
+            "work_time_start":      "",
+            "work_time_end":        "",
+            "wake_times":           {},   # {day_en: "HH:MM"} — per-day wake time
+            "vr_count":             0,
+            "vr_time_start":        "",
+            "vr_time_end":          "",
             "dad_days":             [],
             "dad_type":             "",
+            "dad_time_start":       "",
+            "dad_time_end":         "",
             "grandparents_days":    [],
+            "grandparents_time_start": "",
+            "grandparents_time_end":   "",
             "friends_count":        0,
             "friends_type":         "",
             "friends_days":         [],
+            "friends_time_start":   "",
+            "friends_time_end":     "",
+            "basketball_time_start": "",
+            "basketball_time_end":   "",
+            "tennis_time_start":    "",
+            "tennis_time_end":      "",
+            "lihi_time_start":      "",
+            "lihi_time_end":        "",
             "personal_activities":  [],
             "book_min":             0,
             "blocked_days":         [],
@@ -228,6 +276,34 @@ class Planner:
                 answer_cb(cb_id, "✅")
                 edit(msg_id, f"{q}\n\n<i>✅ {label}</i>")
                 return m
+            answer_cb(cb_id)
+
+    def ask_wake_time(self, q: str) -> str:
+        """Wake time picker (3-per-row). Returns 'HH:MM' string."""
+        msg_id = send(q, kb_wake())
+        while True:
+            cb_id, data = self._wait()
+            if cb_id is None:
+                return "09:00"
+            if data and data.startswith("c:"):
+                val = data[2:]
+                answer_cb(cb_id, "✅")
+                edit(msg_id, f"{q}\n\n<i>✅ {val}</i>")
+                return val
+            answer_cb(cb_id)
+
+    def ask_time(self, q: str, default: str = "20:00") -> str:
+        """Activity time picker (3-per-row). Returns 'HH:MM' string."""
+        msg_id = send(q, kb_time())
+        while True:
+            cb_id, data = self._wait()
+            if cb_id is None:
+                return default
+            if data and data.startswith("c:"):
+                val = data[2:]
+                answer_cb(cb_id, "✅")
+                edit(msg_id, f"{q}\n\n<i>✅ {val}</i>")
+                return val
             answer_cb(cb_id)
 
     def ask_days(self, q: str) -> list:
@@ -311,6 +387,8 @@ class Planner:
                      ("🛋 זמן רגוע בבית", "זמן-רגוע")]
                 )
                 p["lihi_type"] = {d: typ for d in p["lihi_days"]}
+            p["lihi_time_start"] = self.ask_time("💛 <b>ליהי — מאיזה שעה?</b>", "18:00")
+            p["lihi_time_end"]   = self.ask_time("💛 <b>ליהי — עד איזה שעה?</b>", "22:00")
 
         # ── כדורסל ────────────────────────────────────────────────────────────
         n = self.ask_count("🏀 <b>כמה פעמים כדורסל השבוע?</b>")
@@ -325,6 +403,14 @@ class Planner:
                     p["basketball_optional"] = self.ask_days(
                         "🏀 <b>בחר את הימים האופציונליים:</b>"
                     )
+            p["basketball_time_start"] = self.ask_time("🏀 <b>כדורסל — מאיזה שעה?</b>", "20:00")
+            p["basketball_time_end"]   = self.ask_time("🏀 <b>כדורסל — עד איזה שעה?</b>", "22:00")
+
+        # ── VR ────────────────────────────────────────────────────────────────
+        p["vr_count"] = self.ask_count("🥽 <b>אירועי VR — Enjoy VR השבוע?</b>", max_n=3)
+        if p["vr_count"] > 0:
+            p["vr_time_start"] = self.ask_time("🥽 <b>VR — מאיזה שעה?</b>", "18:00")
+            p["vr_time_end"]   = self.ask_time("🥽 <b>VR — עד איזה שעה?</b>", "21:00")
 
         # ── טניס ─────────────────────────────────────────────────────────────
         tennis = self.ask_choice(
@@ -337,6 +423,9 @@ class Planner:
             p["tennis_days"] = ["Wed", "Thu"]
         elif tennis == "custom":
             p["tennis_days"] = self.ask_days("🎾 <b>באיזה ימים טניס?</b>")
+        if p["tennis_days"]:
+            p["tennis_time_start"] = self.ask_time("🎾 <b>טניס — מאיזה שעה?</b>", "18:00")
+            p["tennis_time_end"]   = self.ask_time("🎾 <b>טניס — עד איזה שעה?</b>", "20:00")
 
         # ── קורס עריכה ───────────────────────────────────────────────────────
         p["course_view_min"] = self.ask_minutes(
@@ -391,10 +480,19 @@ class Planner:
                     [("🏢 משמרת", "משמרת"), ("⚡ ספונטנית", "ספונטנית"),
                      ("🚗 עם נסיעות", "עם-נסיעות"), ("📦 קצרה", "קצרה")]
                 )
-                p["work_time_of_day"] = self.ask_choice(
-                    "💼 <b>עבודה — באיזה חלק ביום?</b>",
-                    [("☀️ בוקר", "בוקר"), ("🌤 צהריים", "צהריים"), ("🌙 ערב", "ערב")]
-                ) or "בוקר"
+                p["work_time_start"] = self.ask_time("💼 <b>עבודה — מאיזה שעה?</b>", "09:00")
+                p["work_time_end"]   = self.ask_time("💼 <b>עבודה — עד איזה שעה?</b>", "17:00")
+                # Derive time-of-day from start time for scheduler compatibility
+                try:
+                    start_h = int(p["work_time_start"].split(":")[0])
+                    if start_h < 12:
+                        p["work_time_of_day"] = "בוקר"
+                    elif start_h < 17:
+                        p["work_time_of_day"] = "צהריים"
+                    else:
+                        p["work_time_of_day"] = "ערב"
+                except Exception:
+                    p["work_time_of_day"] = "בוקר"
 
         # ── אבא ──────────────────────────────────────────────────────────────
         dad = self.ask_choice("👨‍👦 <b>אבא השבוע?</b>", [("כן", "yes"), ("לא", "no")])
@@ -405,11 +503,16 @@ class Planner:
                     "👨‍👦 <b>סוג מפגש?</b>",
                     [("🌙 ערב", "ערב"), ("☀️ קצר", "מפגש-קצר"), ("🌅 ארוך", "מפגש-ארוך")]
                 )
+            p["dad_time_start"] = self.ask_time("👨‍👦 <b>אבא — מאיזה שעה?</b>", "18:00")
+            p["dad_time_end"]   = self.ask_time("👨‍👦 <b>אבא — עד איזה שעה?</b>", "21:00")
 
         # ── סבא וסבתא ────────────────────────────────────────────────────────
         gp = self.ask_choice("👵 <b>סבא וסבתא השבוע?</b>", [("כן", "yes"), ("לא", "no")])
         if gp == "yes":
             p["grandparents_days"] = self.ask_days("👵 <b>באיזה יום?</b>")
+            if p["grandparents_days"]:
+                p["grandparents_time_start"] = self.ask_time("👵 <b>סבא/סבתא — מאיזה שעה?</b>", "17:00")
+                p["grandparents_time_end"]   = self.ask_time("👵 <b>סבא/סבתא — עד איזה שעה?</b>", "20:00")
 
         # ── חברים ────────────────────────────────────────────────────────────
         p["friends_count"] = self.ask_count("👬 <b>חברים השבוע?</b>\nכמה מפגשים?", max_n=3)
@@ -419,6 +522,8 @@ class Planner:
                 [("🌙 ערב", "ערב"), ("☕ קפה", "קפה"), ("🎯 יציאה", "יציאה")]
             )
             p["friends_days"] = self.ask_days("👬 <b>באיזה ימים?</b>")
+            p["friends_time_start"] = self.ask_time("👬 <b>חברים — מאיזה שעה?</b>", "20:00")
+            p["friends_time_end"]   = self.ask_time("👬 <b>חברים — עד איזה שעה?</b>", "23:00")
 
         # ── זמן לעצמי ────────────────────────────────────────────────────────
         p["personal_activities"] = self.ask_multi(
@@ -435,19 +540,12 @@ class Planner:
             [0, 20, 30, 45, 60]
         )
 
-        # ── שעת קימה ─────────────────────────────────────────────────────────
-        if p.get("work_days"):
-            p["wake_time_work"] = self.ask_choice(
-                "⏰ <b>שעת קימה בימי עבודה?</b>",
-                [("05:30", "05:30"), ("06:00", "06:00"), ("06:30", "06:30"),
-                 ("07:00", "07:00"), ("07:30", "07:30"), ("08:00", "08:00")]
-            ) or "07:00"
-
-        p["wake_time_free"] = self.ask_choice(
-            "⏰ <b>שעת קימה בימים פנויים?</b>",
-            [("07:30", "07:30"), ("08:00", "08:00"), ("08:30", "08:30"),
-             ("09:00", "09:00"), ("09:30", "09:30"), ("10:00", "10:00")]
-        ) or "09:30"
+        # ── שעת קימה לכל יום ─────────────────────────────────────────────────
+        send("⏰ <b>שעת קימה</b>\nנגדיר לכל יום בנפרד:")
+        time.sleep(0.5)
+        for day_en in DAYS_EN:
+            t = self.ask_wake_time(f"⏰ <b>קימה — יום {DAY_LABEL[day_en]}</b>")
+            p["wake_times"][day_en] = t
 
         # ── חסומים ───────────────────────────────────────────────────────────
         p["blocked_days"] = self.ask_days(
@@ -552,7 +650,7 @@ def _save_to_notion(plan: dict) -> None:
             "Week Type":        {"select": {"name": plan["week_type"]}},
             "Date":             {"date": {"start": next_mon.isoformat()}},
             "Basketball Days":  {"multi_select": [{"name": d} for d in basketball_days]},
-            "VR Events Count":  {"number": 0},
+            "VR Events Count":  {"number": plan.get("vr_count", 0)},
             "Schedule Created": {"checkbox": False},
         },
     )
@@ -569,21 +667,40 @@ def _save_to_notion(plan: dict) -> None:
 
 
 def _send_summary(plan: dict) -> None:
-    lihi         = " ".join(DAY_LABEL[d] for d in plan.get("lihi_days", []))       or "—"
-    bball        = " ".join(DAY_LABEL[d] for d in plan.get("basketball_days", [])) or "—"
-    tennis       = " ".join(DAY_LABEL[d] for d in plan.get("tennis_days", []))     or "—"
+    def _fmt_days_time(days_key, start_key, end_key):
+        days_s = " ".join(DAY_LABEL[d] for d in plan.get(days_key, [])) or "—"
+        s = plan.get(start_key, "")
+        e = plan.get(end_key, "")
+        return f"{days_s} {s}–{e}" if s and e else days_s
+
+    lihi         = _fmt_days_time("lihi_days", "lihi_time_start", "lihi_time_end")
+    bball        = _fmt_days_time("basketball_days", "basketball_time_start", "basketball_time_end")
+    tennis       = _fmt_days_time("tennis_days", "tennis_time_start", "tennis_time_end")
     blocked      = " ".join(DAY_LABEL[d] for d in plan.get("blocked_days", []))    or "—"
     work_days_s  = " ".join(DAY_LABEL[d] for d in plan.get("work_days", []))       or "—"
     friends_days = " ".join(DAY_LABEL[d] for d in plan.get("friends_days", []))    or "—"
+
+    vr_count = plan.get("vr_count", 0)
+    vr_s = plan.get("vr_time_start", "")
+    vr_e = plan.get("vr_time_end", "")
+    vr_str = f"{vr_count}x {vr_s}–{vr_e}" if vr_count and vr_s and vr_e else (str(vr_count) if vr_count else "—")
+
+    dad_days_s = _fmt_days_time("dad_days", "dad_time_start", "dad_time_end")
+    gp_days_s  = _fmt_days_time("grandparents_days", "grandparents_time_start", "grandparents_time_end")
     next_mon = _get_next_monday()
 
-    work_type     = plan.get("work_type", "") or "—"
-    work_time     = plan.get("work_time_of_day", "")
-    work_str      = f"{work_days_s} ({work_type}{', ' + work_time if work_time else ''})" if plan.get("work_days") else "—"
+    work_type  = plan.get("work_type", "") or "—"
+    wts = plan.get("work_time_start", "")
+    wte = plan.get("work_time_end", "")
+    work_time_s = f"{wts}–{wte}" if wts and wte else plan.get("work_time_of_day", "")
+    work_str   = f"{work_days_s} ({work_type}{', ' + work_time_s if work_time_s else ''})" if plan.get("work_days") else "—"
 
     fc = plan.get("friends_count", 0)
     ft = plan.get("friends_type", "") or "—"
-    friends_str = f"{fc} מפגשים ({ft}) — {friends_days}" if fc else "—"
+    fts = plan.get("friends_time_start", "")
+    fte = plan.get("friends_time_end", "")
+    friends_time_s = f" {fts}–{fte}" if fts and fte else ""
+    friends_str = f"{fc} מפגשים ({ft}) — {friends_days}{friends_time_s}" if fc else "—"
 
     # Course
     cv_min   = plan.get("course_view_min", 0)
@@ -602,9 +719,11 @@ def _send_summary(plan: dict) -> None:
     sys_type = plan.get("system_type", "") or "—"
     sys_str  = f"{sys_min} דק׳ ({sys_days}—{sys_time}) — {sys_type}" if sys_min else "—"
 
-    # Wake times
-    wake_work = plan.get("wake_time_work", "07:00")
-    wake_free = plan.get("wake_time_free", "09:30")
+    # Wake times per day
+    wake_times = plan.get("wake_times", {})
+    wake_str = "  ".join(
+        f"{DAY_LABEL[d]}{wake_times[d]}" for d in DAYS_EN if d in wake_times
+    ) or "—"
 
     lines = [
         f"✅ <b>שבוע {next_mon.strftime('%d/%m')} נשמר!</b>\n",
@@ -612,12 +731,15 @@ def _send_summary(plan: dict) -> None:
         f"💛 ליהי: {lihi}",
         f"🏀 כדורסל: {bball}",
         f"🎾 טניס: {tennis}",
+        f"🥽 VR: {vr_str}",
+        f"👨‍👦 אבא: {dad_days_s}",
+        f"👵 סבא/סבתא: {gp_days_s}",
         f"🎬 צפייה: {cv_str}",
         f"🎬 תרגול: {cp_str}",
         f"💻 מערכת: {sys_str}",
         f"💼 עבודה: {work_str}",
         f"👬 חברים: {friends_str}",
-        f"⏰ קימה: עבודה {wake_work} | חופשי {wake_free}",
+        f"⏰ קימה: {wake_str}",
         f"📖 ספר: {plan.get('book_min',0)} דק׳ ביום",
         f"⛔ חסומים: {blocked}",
         "",
