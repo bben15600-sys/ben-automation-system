@@ -281,6 +281,17 @@ def build_home_day(
     friends_days       = set(plan.get("friends_days", []))
     friends_type       = plan.get("friends_type", "")
 
+    # Time-of-day and day preferences (new fields)
+    course_view_days     = set(plan.get("course_view_days", []))
+    course_view_time     = plan.get("course_view_time", "בוקר")
+    course_practice_days = set(plan.get("course_practice_days", []))
+    course_practice_time = plan.get("course_practice_time", "צהריים")
+    system_days          = set(plan.get("system_days", []))
+    system_time          = plan.get("system_time", "בוקר")
+    work_time_of_day     = plan.get("work_time_of_day", "בוקר")
+    wake_time_work       = plan.get("wake_time_work", "07:00")
+    wake_time_free       = plan.get("wake_time_free", "09:30")
+
     has_basketball   = day_en in basketball_days
     has_tennis       = day_en in TENNIS_DAYS
     has_lihi         = day_en in lihi_days
@@ -291,16 +302,26 @@ def build_home_day(
     has_work         = day_en in work_days
     has_friends      = day_en in friends_days
 
-    day_asgn      = assignments.get(day_en, {})
-    has_cv        = day_asgn.get("course_view", False)
-    has_cp        = day_asgn.get("course_practice", False)
-    has_sys       = day_asgn.get("system", False)
+    # Last Monday (entering base) — no personal activities; person is leaving home
+    if day_index == 7:
+        has_lihi = has_basketball = has_work = has_friends = has_vr = False
 
-    cv_min  = plan.get("course_view_min", 90)
-    cp_min  = plan.get("course_practice_min", 60)
-    sys_min = plan.get("system_min", 60)
+    cv_min  = plan.get("course_view_min", 0) or 90
+    cp_min  = plan.get("course_practice_min", 0) or 60
+    sys_min = plan.get("system_min", 0) or 60
 
-    # day_index: 0=Mon 1=Tue 2=Wed 3=Thu 4=Fri 5=Sat 6=Sun 7=Mon(next/base)
+    # Activity assignment: prefer user-specified days, fall back to auto-assign
+    if day_index == 7:
+        has_cv = has_cp = has_sys = False
+    else:
+        day_asgn = assignments.get(day_en, {})
+        has_cv  = (day_en in course_view_days)     if course_view_days     else day_asgn.get("course_view", False)
+        has_cp  = (day_en in course_practice_days) if course_practice_days else day_asgn.get("course_practice", False)
+        has_sys = (day_en in system_days)           if system_days          else day_asgn.get("system", False)
+        # Only show if minutes are planned
+        if not plan.get("course_view_min"):     has_cv  = False
+        if not plan.get("course_practice_min"): has_cp  = False
+        if not plan.get("system_min"):          has_sys = False
 
     # ── Work type label ───────────────────────────────────────────────────────
     _WORK_LABELS = {
@@ -313,6 +334,10 @@ def build_home_day(
     _FRIENDS_LABELS = {"ערב": "ערב", "קפה": "☕ קפה", "יציאה": "🎯 יציאה"}
     friends_label = _FRIENDS_LABELS.get(friends_type, friends_type)
 
+    # ── Wake time ─────────────────────────────────────────────────────────────
+    wake_time   = wake_time_work if has_work else wake_time_free
+    wake_prefix = f"☀️ קימה {wake_time}"
+
     # ── Morning ──────────────────────────────────────────────────────────────
     if day_index == 0:        # Monday — returning home from base
         morning = "🏠 הגעה הביתה — אוכל, בוקר"
@@ -320,16 +345,16 @@ def build_home_day(
         morning = "✈️ כניסה לבסיס — התארגנות"
     elif day_index == 5:      # Saturday
         morning = "😴 שינה / מנוחה מלאה"
-    elif has_work:
-        morning = f"💼 עבודה{' — ' + work_label if work_label else ''}"
+    elif has_work and work_time_of_day == "בוקר":
+        morning = f"{wake_prefix}\n💼 עבודה{' — ' + work_label if work_label else ''}"
+    elif has_cv and course_view_time == "בוקר":
+        morning = f"{wake_prefix}\n🎬 קורס צפייה ({cv_min} דק׳)"
+    elif has_sys and system_time == "בוקר":
+        morning = f"{wake_prefix}\n💻 מערכת ({sys_min} דק׳)"
     elif day_index == 4:      # Friday (non-work)
-        morning = "☀️ קימה 09:30 — ארוחת בוקר"
-    elif has_cv:
-        morning = f"☀️ קימה 09:30 — 🎬 קורס צפייה ({cv_min} דק׳)"
-    elif has_sys and not has_cp:
-        morning = f"☀️ קימה 09:30 — 💻 מערכת ({sys_min} דק׳)"
+        morning = f"{wake_prefix} — ארוחת בוקר"
     else:
-        morning = "☀️ קימה 09:30 — אוכל, התארגנות"
+        morning = f"{wake_prefix} — אוכל, התארגנות"
 
     # ── Afternoon ────────────────────────────────────────────────────────────
     editing = False
@@ -337,17 +362,21 @@ def build_home_day(
         afternoon = "✈️ בסיס"
     elif has_blocked:
         afternoon = "⛔ יום חסום"
+    elif has_work and work_time_of_day == "צהריים":
+        afternoon = f"💼 עבודה{' — ' + work_label if work_label else ''}"
     elif has_tennis:
         afternoon = "🎾 טניס"
     elif has_grandparents:
         afternoon = "👵 ביקור סבא וסבתא"
     elif has_dad and not has_lihi:
         afternoon = "👨‍👦 מפגש אבא"
-    elif has_cp:
+    elif has_cp and course_practice_time == "צהריים":
         afternoon = f"🎬 קורס תרגול ({cp_min} דק׳)"
         editing = True
-    elif has_sys and has_cv:
+    elif has_sys and system_time == "צהריים":
         afternoon = f"💻 עבודה על המערכת ({sys_min} דק׳)"
+    elif has_cv and course_view_time == "צהריים":
+        afternoon = f"🎬 קורס צפייה ({cv_min} דק׳)"
     elif day_index == 4:      # Friday
         afternoon = "👨‍👩‍👧 משפחה (אבא, סבא וסבתא)"
     elif day_index == 5:      # Saturday
@@ -361,10 +390,17 @@ def build_home_day(
         evening = "🪖 בסיס — ערב"
     elif has_blocked:
         evening = "⛔ —"
+    elif has_work and work_time_of_day == "ערב":
+        evening = f"💼 עבודה{' — ' + work_label if work_label else ''}"
     elif has_basketball:
         evening = "🏀 כדורסל 20:00–22:30"
     elif has_vr:
         evening = "🥽 אירוע VR — Enjoy VR"
+    elif has_cp and course_practice_time == "ערב":
+        evening = f"🎬 קורס תרגול ({cp_min} דק׳)"
+        editing = True
+    elif has_sys and system_time == "ערב":
+        evening = f"💻 מערכת ({sys_min} דק׳)"
     elif has_lihi:
         evening = "💛 ליהי"
     elif has_friends:
