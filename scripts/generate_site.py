@@ -199,8 +199,10 @@ def day_type_info(e: dict) -> tuple:
         return "חג", "#fbbf24", "#451a03"
     if "נסיעה" in ft:
         return "נסיעה", "#60a5fa", "#1e3a5f"
-    if "מנוחה מלא" in ft or (e["day_en"] == "Sat" and not e["basketball"] and not e["lihi"]):
+    if not e["basketball"] and ("מנוחה מלא" in ft or (e["day_en"] == "Sat" and not e["lihi"])):
         return "מנוחה מלאה", "#a78bfa", "#2e1065"
+    if "הגעה הביתה" in ft:
+        return "חזרה הביתה", "#6b7280", "#1f2937"
     if e["priority"] == "דחוף" or "עמוס" in ft:
         return "יום עמוס", "#fb923c", "#431407"
     if e["lihi"] and e["family"]:

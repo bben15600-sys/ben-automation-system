@@ -292,6 +292,10 @@ def build_home_day(
     has_work         = day_en in work_days
     has_friends      = day_en in friends_days
 
+    # Last Monday (entering base) — no personal activities; person is leaving home
+    if day_index == 7:
+        has_lihi = has_basketball = has_work = has_friends = has_vr = False
+
     day_asgn      = assignments.get(day_en, {})
     has_cv        = day_asgn.get("course_view", False)
     has_cp        = day_asgn.get("course_practice", False)
@@ -316,7 +320,7 @@ def build_home_day(
 
     # ── Morning ──────────────────────────────────────────────────────────────
     if day_index == 0:        # Monday — returning home from base
-        morning = "🏠 הגעה הביתה — אוכל, בוקר"
+        morning = "🏠 הגעה הביתה"
     elif day_index == 7:      # Monday (next) — entering base
         morning = "✈️ כניסה לבסיס — התארגנות"
     elif day_index == 5:      # Saturday
