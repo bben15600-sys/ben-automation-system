@@ -170,6 +170,7 @@ class Planner:
             "work_type":            "",
             "work_time_of_day":     "בוקר",
             "wake_times":           {},   # {day_en: "HH:MM"} — per-day wake time
+            "vr_count":             0,
             "dad_days":             [],
             "dad_type":             "",
             "grandparents_days":    [],
@@ -353,6 +354,9 @@ class Planner:
                     p["basketball_optional"] = self.ask_days(
                         "🏀 <b>בחר את הימים האופציונליים:</b>"
                     )
+
+        # ── VR ────────────────────────────────────────────────────────────────
+        p["vr_count"] = self.ask_count("🥽 <b>אירועי VR — Enjoy VR השבוע?</b>", max_n=3)
 
         # ── טניס ─────────────────────────────────────────────────────────────
         tennis = self.ask_choice(
@@ -573,7 +577,7 @@ def _save_to_notion(plan: dict) -> None:
             "Week Type":        {"select": {"name": plan["week_type"]}},
             "Date":             {"date": {"start": next_mon.isoformat()}},
             "Basketball Days":  {"multi_select": [{"name": d} for d in basketball_days]},
-            "VR Events Count":  {"number": 0},
+            "VR Events Count":  {"number": plan.get("vr_count", 0)},
             "Schedule Created": {"checkbox": False},
         },
     )

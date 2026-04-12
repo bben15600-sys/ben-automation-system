@@ -137,15 +137,18 @@ def parse_entry(page: dict) -> dict:
 
 def infer_category(text: str) -> str:
     t = text.lower()
-    if any(k in t for k in ["כדורסל", "טניס", "אימון", "ספורט"]):     return "ספורט"
-    if any(k in t for k in ["ליהי"]):                                   return "זוגיות"
-    if any(k in t for k in ["אבא", "סבא", "סבתא", "משפחה"]):           return "משפחה"
-    if any(k in t for k in ["עריכה", "קורס", "מערכת", "לוגיקה"]):      return "עבודה"
-    if any(k in t for k in ["חברים", "חבר", "קפה"]):                   return "חברתי"
-    if any(k in t for k in ["מנוחה", "שינה", "נוח"]):                  return "מנוחה"
-    if any(k in t for k in ["חג", "יום טוב", "חגיגה"]):                return "חג"
+    if any(k in t for k in ["כדורסל", "טניס", "אימון", "ספורט"]):        return "ספורט"
+    if any(k in t for k in ["ליהי"]):                                      return "זוגיות"
+    if any(k in t for k in ["אבא", "סבא", "סבתא", "משפחה"]):              return "משפחה"
+    if any(k in t for k in ["עריכה", "קורס", "מערכת", "לוגיקה"]):         return "עבודה"
+    if any(k in t for k in ["עבודה", "משמרת"]):                            return "עבודה"
+    if any(k in t for k in ["חברים", "חבר", "קפה"]):                      return "חברתי"
+    if any(k in t for k in ["שינה"]):                                      return "מנוחה"
+    if any(k in t for k in ["מנוחה", "נוח"]):                             return "מנוחה"
+    if any(k in t for k in ["חג", "יום טוב", "חגיגה"]):                   return "חג"
     if any(k in t for k in ["נסיעה", "הגעה", "יציאה", "בסיס", "כניסה"]): return "לוגיסטיקה"
-    if any(k in t for k in ["קימה", "בוקר"]):                          return "התחלת יום"
+    if any(k in t for k in ["ארוחת", "ארוחה", "קימה", "הפסקה", "בוקר"]): return "התחלת יום"
+    if any(k in t for k in ["ספר", "קריאה"]):                             return "כללי"
     return "כללי"
 
 
@@ -173,17 +176,22 @@ def block_icon(text: str) -> str:
     if "אבא"    in t: return "🧑"
     if "סבא"    in t or "סבתא"  in t: return "👴"
     if "חברים"  in t or "חבר"   in t: return "👥"
-    if "מנוחה"  in t or "שינה"  in t: return "🛋️"
+    if "שינה"   in t:                  return "😴"
+    if "מנוחה"  in t:                  return "🛋️"
+    if "ארוחת"  in t or "ארוחה" in t: return "🍽"
+    if "הפסקה"  in t:                  return "☕"
     if "קפה"    in t:                  return "☕"
     if "קימה"   in t or "בוקר"  in t: return "☕"
+    if "עבודה"  in t:                  return "💼"
     if "חג"     in t:                  return "🎉"
     if "נסיעה"  in t or "הגעה"  in t: return "🚗"
     if "בסיס"   in t or "כניסה" in t: return "✈️"
     if "יציאה"  in t:                  return "🚗"
     if "הליכה"  in t:                  return "🚶"
-    if "ספר"    in t:                  return "📖"
+    if "ספר"    in t or "קריאה" in t: return "📖"
     if "vr"     in t:                  return "🥽"
     if "תכנון"  in t:                  return "📋"
+    if "חופשי"  in t:                  return "✨"
     return "⚡"
 
 
@@ -261,23 +269,46 @@ def build_items(e: dict) -> list[dict]:
         text = e[slot]
         if not text or not text.strip():
             continue
-        # Check for explicit time range in text e.g. "19:30 – 22:30" or "19:30-22:30"
-        time_match = re.search(r'\d{1,2}:\d{2}\s*[–\-]\s*\d{1,2}:\d{2}', text)
-        if time_match:
-            time_display = time_match.group().replace("-", "–").strip()
-            text_clean   = (text[:time_match.start()] + text[time_match.end():]).strip(" –-")
-        else:
-            time_display = TIME_LABELS[slot]
-            text_clean   = text
 
-        parts = [p.strip() for p in re.split(r'[,\n]+', text_clean) if p.strip()]
-        for i, part in enumerate(parts):
-            items.append({
-                "icon":     block_icon(part),
-                "text":     part,
-                "time":     time_display if i == 0 else "",
-                "category": infer_category(part),
-            })
+        lines      = [l.strip() for l in text.split("\n") if l.strip()]
+        slot_label = TIME_LABELS[slot]
+
+        for i, line in enumerate(lines):
+            # "HH:MM–HH:MM ..." range prefix
+            range_m  = re.match(r'^(\d{1,2}:\d{2}\s*[–\-]\s*\d{1,2}:\d{2})\s*[—\-–]?\s*(.*)', line)
+            # "HH:MM — text" or "HH:MM text"
+            single_m = re.match(r'^(\d{1,2}:\d{2})\s*(?:[—\-–]\s*)?(.*)', line)
+
+            if range_m:
+                t_display = range_m.group(1).replace("-", "–").strip()
+                body      = range_m.group(2).strip()
+            elif single_m and single_m.group(2).strip():
+                t_display = single_m.group(1)
+                body      = single_m.group(2).strip()
+            else:
+                t_display = slot_label if i == 0 else ""
+                body      = line
+
+            if not body:
+                continue
+
+            # Old-format single line may have comma-separated sub-items
+            if not range_m and not (single_m and single_m.group(2).strip()):
+                parts = [p.strip() for p in body.split(",") if p.strip()]
+                for j, part in enumerate(parts):
+                    items.append({
+                        "icon":     block_icon(part),
+                        "text":     part,
+                        "time":     t_display if j == 0 else "",
+                        "category": infer_category(part),
+                    })
+            else:
+                items.append({
+                    "icon":     block_icon(body),
+                    "text":     body,
+                    "time":     t_display,
+                    "category": infer_category(body),
+                })
 
     if e["notes"]:
         items.append({"icon": "📝", "text": e["notes"], "time": "", "category": "כללי"})
