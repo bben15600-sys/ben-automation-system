@@ -365,7 +365,8 @@ def build_home_day(
     elif day_index == 5:    # Saturday
         morning_lines = [f"{wake} — 😴 שינה / מנוחה מלאה"]
         if has_tennis:
-            aft = "12:30 — 🍽 ארוחת צהריים\n15:00 — 🎾 טניס"
+            t_start = plan.get("tennis_time_start", "") or "15:00"
+            aft = f"12:30 — 🍽 ארוחת צהריים\n{t_start} — 🎾 טניס"
         elif has_grandparents:
             aft = f"12:30 — 🍽 ארוחת צהריים\n{gp_start} — 👵 ביקור סבא וסבתא"
         else:
@@ -424,7 +425,8 @@ def build_home_day(
             we_str = f"–{work_end}" if work_end else ""
             a.append(f"{ws} — 💼 עבודה{' — ' + work_label if work_label else ''}{we_str}")
         elif has_tennis:
-            a.append("15:00 — 🎾 טניס")
+            t_start = plan.get("tennis_time_start", "") or "15:00"
+            a.append(f"{t_start} — 🎾 טניס")
         elif has_grandparents:
             a.append(f"{gp_start} — 👵 ביקור סבא וסבתא")
         elif has_dad and not has_lihi:
