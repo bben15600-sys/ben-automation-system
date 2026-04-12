@@ -13,7 +13,7 @@ Required env vars:
 import os
 import re
 import pathlib
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -384,7 +384,8 @@ def generate_html(entries: list[dict], week_start: date) -> str:
     stats      = compute_stats(entries)
     week_end   = week_start + timedelta(days=7)
     week_range = f"{week_start.strftime('%-d/%-m')} – {week_end.strftime('%-d/%-m/%Y')}"
-    generated  = datetime.now().strftime("%d/%m %H:%M")
+    IST = timezone(timedelta(hours=3))
+    generated  = datetime.now(IST).strftime("%d/%m %H:%M")
 
     # Sort: Mon first (this week), then Tue–Sun, then Mon (next week)
     first_mon   = [e for e in entries if e["day_en"] == "Mon" and e["day_date"] == week_start]
