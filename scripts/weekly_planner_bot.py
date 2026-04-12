@@ -32,7 +32,6 @@ CHAT_ID        = _clean(os.environ["TELEGRAM_CHAT_ID"])
 API            = f"https://api.telegram.org/bot{BOT_TOKEN}"
 NOTION_TOKEN   = os.environ.get("NOTION_TOKEN", "").strip()
 ROTATION_DB_ID = _clean(os.environ.get("ROTATION_DB_ID", "29d51fc8-512b-4415-97c8-67121564b4f2"))
-WEEKLY_DB_ID   = _clean(os.environ.get("WEEKLY_DB_ID", ""))
 
 TIMEOUT_SECS = 25 * 60
 
@@ -136,27 +135,36 @@ class Planner:
         self.offset = 0
         self.start  = time.time()
         self.plan   = {
-            "week_type":           "Home",
-            "lihi_days":           [],
-            "lihi_type":           {},    # {day_en: type_str}
-            "basketball_days":     [],
-            "basketball_optional": [],
-            "tennis_days":         [],
-            "course_view_min":     0,
-            "course_practice_min": 0,
-            "system_min":          0,
-            "system_type":         "",
-            "work_days":           [],
-            "work_type":           "",
-            "dad_days":            [],
-            "dad_type":            "",
-            "grandparents_days":   [],
-            "friends_count":       0,
-            "friends_type":        "",
-            "friends_days":        [],
-            "personal_activities": [],
-            "book_min":            0,
-            "blocked_days":        [],
+            "week_type":            "Home",
+            "lihi_days":            [],
+            "lihi_type":            {},    # {day_en: type_str}
+            "basketball_days":      [],
+            "basketball_optional":  [],
+            "tennis_days":          [],
+            "course_view_min":      0,
+            "course_view_days":     [],
+            "course_view_time":     "בוקר",
+            "course_practice_min":  0,
+            "course_practice_days": [],
+            "course_practice_time": "צהריים",
+            "system_min":           0,
+            "system_type":          "",
+            "system_days":          [],
+            "system_time":          "בוקר",
+            "work_days":            [],
+            "work_type":            "",
+            "work_time_of_day":     "בוקר",
+            "wake_time_work":       "07:00",
+            "wake_time_free":       "09:30",
+            "dad_days":             [],
+            "dad_type":             "",
+            "grandparents_days":    [],
+            "friends_count":        0,
+            "friends_type":         "",
+            "friends_days":         [],
+            "personal_activities":  [],
+            "book_min":             0,
+            "blocked_days":         [],
         }
 
     # ── Polling ───────────────────────────────────────────────────────────────
@@ -335,10 +343,23 @@ class Planner:
             "🎬 <b>קורס עריכה — צפייה</b>\nסה״כ כמה דקות השבוע?",
             [0, 60, 90, 120, 150]
         )
+        if p["course_view_min"] > 0:
+            p["course_view_days"] = self.ask_days("🎬 <b>צפייה — באיזה ימים?</b>")
+            p["course_view_time"] = self.ask_choice(
+                "🎬 <b>צפייה — באיזה חלק ביום?</b>",
+                [("☀️ בוקר", "בוקר"), ("🌤 צהריים", "צהריים")]
+            ) or "בוקר"
+
         p["course_practice_min"] = self.ask_minutes(
             "🎬 <b>קורס עריכה — תרגול</b>\nסה״כ כמה דקות השבוע?",
             [0, 30, 60, 90, 120]
         )
+        if p["course_practice_min"] > 0:
+            p["course_practice_days"] = self.ask_days("🎬 <b>תרגול — באיזה ימים?</b>")
+            p["course_practice_time"] = self.ask_choice(
+                "🎬 <b>תרגול — באיזה חלק ביום?</b>",
+                [("🌤 צהריים", "צהריים"), ("🌙 ערב", "ערב")]
+            ) or "צהריים"
 
         # ── מערכת ────────────────────────────────────────────────────────────
         p["system_min"] = self.ask_minutes(
@@ -354,6 +375,11 @@ class Planner:
                  ("🧪 בדיקות", "בדיקות"),
                  ("🎨 UI", "שיפור-UI")]
             )
+            p["system_days"] = self.ask_days("💻 <b>מערכת — באיזה ימים?</b>")
+            p["system_time"] = self.ask_choice(
+                "💻 <b>מערכת — באיזה חלק ביום?</b>",
+                [("☀️ בוקר", "בוקר"), ("🌤 צהריים", "צהריים"), ("🌙 ערב", "ערב")]
+            ) or "בוקר"
 
         # ── עבודה ────────────────────────────────────────────────────────────
         n = self.ask_count("💼 <b>ימי עבודה / משמרות?</b>\n(0 = שבוע בית ללא עבודה)")
@@ -365,6 +391,10 @@ class Planner:
                     [("🏢 משמרת", "משמרת"), ("⚡ ספונטנית", "ספונטנית"),
                      ("🚗 עם נסיעות", "עם-נסיעות"), ("📦 קצרה", "קצרה")]
                 )
+                p["work_time_of_day"] = self.ask_choice(
+                    "💼 <b>עבודה — באיזה חלק ביום?</b>",
+                    [("☀️ בוקר", "בוקר"), ("🌤 צהריים", "צהריים"), ("🌙 ערב", "ערב")]
+                ) or "בוקר"
 
         # ── אבא ──────────────────────────────────────────────────────────────
         dad = self.ask_choice("👨‍👦 <b>אבא השבוע?</b>", [("כן", "yes"), ("לא", "no")])
@@ -404,6 +434,20 @@ class Planner:
             "📖 <b>ספר</b>\nכמה דקות ביום?",
             [0, 20, 30, 45, 60]
         )
+
+        # ── שעת קימה ─────────────────────────────────────────────────────────
+        if p.get("work_days"):
+            p["wake_time_work"] = self.ask_choice(
+                "⏰ <b>שעת קימה בימי עבודה?</b>",
+                [("05:30", "05:30"), ("06:00", "06:00"), ("06:30", "06:30"),
+                 ("07:00", "07:00"), ("07:30", "07:30"), ("08:00", "08:00")]
+            ) or "07:00"
+
+        p["wake_time_free"] = self.ask_choice(
+            "⏰ <b>שעת קימה בימים פנויים?</b>",
+            [("07:30", "07:30"), ("08:00", "08:00"), ("08:30", "08:30"),
+             ("09:00", "09:00"), ("09:30", "09:30"), ("10:00", "10:00")]
+        ) or "09:30"
 
         # ── חסומים ───────────────────────────────────────────────────────────
         p["blocked_days"] = self.ask_days(
@@ -471,9 +515,9 @@ def _save_to_notion(plan: dict) -> None:
         print(f"WARNING: DB schema check/update failed: {e}")
 
     next_mon  = _get_next_monday()
-    week_end  = next_mon + timedelta(days=7)
+    week_end  = next_mon + timedelta(days=7)  # Mon to next Mon (8 days)
 
-    # Archive ALL existing entries for this week — ensures only one fresh entry exists
+    # Check if entry already exists
     try:
         existing = notion.databases.query(
             database_id=db_id,
@@ -482,13 +526,20 @@ def _save_to_notion(plan: dict) -> None:
                 {"property": "Date", "date": {"on_or_before": week_end.isoformat()}},
             ]},
         )
-        for page in existing.get("results", []):
-            notion.pages.update(page_id=page["id"], archived=True)
-            print(f"Archived old rotation entry {page['id']}")
+        if existing.get("results"):
+            page_id = existing["results"][0]["id"]
+            print(f"Entry already exists for {next_mon} — updating Plan JSON…")
+            notion.pages.update(
+                page_id=page_id,
+                properties={
+                    "Plan JSON": {"rich_text": [{"text": {"content": json.dumps(plan, ensure_ascii=False)[:2000]}}]},
+                }
+            )
+            print(f"✅ Updated Plan JSON for {next_mon}")
+            return
     except Exception as e:
-        print(f"WARNING: cleanup of existing entries failed: {e}")
+        print(f"WARNING: existing-entry query failed: {e}")
 
-    # Create a single fresh entry with all current plan data
     basketball_days = list(dict.fromkeys(
         plan.get("basketball_days", []) + plan.get("basketball_optional", [])
     ))
@@ -503,10 +554,18 @@ def _save_to_notion(plan: dict) -> None:
             "Basketball Days":  {"multi_select": [{"name": d} for d in basketball_days]},
             "VR Events Count":  {"number": 0},
             "Schedule Created": {"checkbox": False},
-            "Plan JSON":        {"rich_text": [{"text": {"content": plan_json_str[:2000]}}]},
         },
     )
-    print(f"✅ Fresh rotation entry created: {result['id']} for week of {next_mon}")
+    page_id = result["id"]
+    print(f"✅ Page created: {page_id}")
+
+    notion.pages.update(
+        page_id=page_id,
+        properties={
+            "Plan JSON": {"rich_text": [{"text": {"content": plan_json_str[:2000]}}]},
+        }
+    )
+    print(f"✅ Plan JSON saved to Notion for week of {next_mon}")
 
 
 def _send_summary(plan: dict) -> None:
@@ -514,16 +573,38 @@ def _send_summary(plan: dict) -> None:
     bball        = " ".join(DAY_LABEL[d] for d in plan.get("basketball_days", [])) or "—"
     tennis       = " ".join(DAY_LABEL[d] for d in plan.get("tennis_days", []))     or "—"
     blocked      = " ".join(DAY_LABEL[d] for d in plan.get("blocked_days", []))    or "—"
-    work_days    = " ".join(DAY_LABEL[d] for d in plan.get("work_days", []))       or "—"
+    work_days_s  = " ".join(DAY_LABEL[d] for d in plan.get("work_days", []))       or "—"
     friends_days = " ".join(DAY_LABEL[d] for d in plan.get("friends_days", []))    or "—"
     next_mon = _get_next_monday()
 
-    work_type = plan.get("work_type", "") or "—"
-    work_str  = f"{work_days} ({work_type})" if plan.get("work_days") else "—"
+    work_type     = plan.get("work_type", "") or "—"
+    work_time     = plan.get("work_time_of_day", "")
+    work_str      = f"{work_days_s} ({work_type}{', ' + work_time if work_time else ''})" if plan.get("work_days") else "—"
 
     fc = plan.get("friends_count", 0)
     ft = plan.get("friends_type", "") or "—"
     friends_str = f"{fc} מפגשים ({ft}) — {friends_days}" if fc else "—"
+
+    # Course
+    cv_min   = plan.get("course_view_min", 0)
+    cv_days  = " ".join(DAY_LABEL[d] for d in plan.get("course_view_days", [])) or "—"
+    cv_time  = plan.get("course_view_time", "בוקר")
+    cp_min   = plan.get("course_practice_min", 0)
+    cp_days  = " ".join(DAY_LABEL[d] for d in plan.get("course_practice_days", [])) or "—"
+    cp_time  = plan.get("course_practice_time", "צהריים")
+    cv_str   = f"{cv_min} דק׳ ({cv_days}—{cv_time})" if cv_min else "—"
+    cp_str   = f"{cp_min} דק׳ ({cp_days}—{cp_time})" if cp_min else "—"
+
+    # System
+    sys_min  = plan.get("system_min", 0)
+    sys_days = " ".join(DAY_LABEL[d] for d in plan.get("system_days", [])) or "—"
+    sys_time = plan.get("system_time", "בוקר")
+    sys_type = plan.get("system_type", "") or "—"
+    sys_str  = f"{sys_min} דק׳ ({sys_days}—{sys_time}) — {sys_type}" if sys_min else "—"
+
+    # Wake times
+    wake_work = plan.get("wake_time_work", "07:00")
+    wake_free = plan.get("wake_time_free", "09:30")
 
     lines = [
         f"✅ <b>שבוע {next_mon.strftime('%d/%m')} נשמר!</b>\n",
@@ -531,10 +612,12 @@ def _send_summary(plan: dict) -> None:
         f"💛 ליהי: {lihi}",
         f"🏀 כדורסל: {bball}",
         f"🎾 טניס: {tennis}",
-        f"🎬 קורס: {plan.get('course_view_min',0)} דק׳ צפייה + {plan.get('course_practice_min',0)} דק׳ תרגול",
-        f"💻 מערכת: {plan.get('system_min',0)} דק׳ ({plan.get('system_type','') or '—'})",
+        f"🎬 צפייה: {cv_str}",
+        f"🎬 תרגול: {cp_str}",
+        f"💻 מערכת: {sys_str}",
         f"💼 עבודה: {work_str}",
         f"👬 חברים: {friends_str}",
+        f"⏰ קימה: עבודה {wake_work} | חופשי {wake_free}",
         f"📖 ספר: {plan.get('book_min',0)} דק׳ ביום",
         f"⛔ חסומים: {blocked}",
         "",
@@ -542,52 +625,9 @@ def _send_summary(plan: dict) -> None:
     ]
     send("\n".join(lines))
 
-# ── Cleanup ───────────────────────────────────────────────────────────────────
-
-def _clear_old_data() -> None:
-    """
-    Run at the START of a new questionnaire.
-    Archives old rotation entries and weekly schedule entries for next week
-    so the scheduler always builds from the freshest data.
-    """
-    if not NOTION_TOKEN:
-        return
-    try:
-        from notion_client import Client
-        notion = Client(auth=NOTION_TOKEN)
-        next_mon = _get_next_monday()
-        week_end = next_mon + timedelta(days=7)
-        date_filter = {"and": [
-            {"property": "Date", "date": {"on_or_after":  next_mon.isoformat()}},
-            {"property": "Date", "date": {"on_or_before": week_end.isoformat()}},
-        ]}
-
-        # Archive rotation entries
-        rot_id = _clean(os.environ.get("ROTATION_DB_ID", ROTATION_DB_ID))
-        rot_id = _resolve_db_id(notion, rot_id)
-        for page in notion.databases.query(database_id=rot_id, filter=date_filter).get("results", []):
-            notion.pages.update(page_id=page["id"], archived=True)
-            print(f"Cleared rotation entry {page['id']}")
-
-        # Archive weekly schedule entries
-        if WEEKLY_DB_ID:
-            from re import sub as _sub
-            wid = _sub(r'\s', '', os.environ.get("WEEKLY_DB_ID", WEEKLY_DB_ID))
-            for page in notion.databases.query(database_id=wid, filter=date_filter).get("results", []):
-                notion.pages.update(page_id=page["id"], archived=True)
-                print(f"Cleared schedule entry {page['id']}")
-
-        print(f"✅ Old data cleared for week of {next_mon}")
-    except Exception as e:
-        print(f"WARNING: could not clear old data: {e}")
-
-
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def main():
-    # Clear all stale data before the user starts answering
-    _clear_old_data()
-
     planner = Planner()
     plan = planner.run()
 
