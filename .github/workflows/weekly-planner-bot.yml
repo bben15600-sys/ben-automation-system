@@ -5,6 +5,11 @@ on:
     # Backup cron (primary trigger is Google Cloud Scheduler via workflow_dispatch)
     - cron: "0 17 * * 0"
   workflow_dispatch:   # triggered by Cloud Function every Sunday 17:00 UTC
+    inputs:
+      skip_bot:
+        description: 'דלג על השאלון — השתמש בתשובות האחרונות'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -25,6 +30,7 @@ jobs:
 
       # ── Step 1: Interactive planner bot (waits for user answers) ──────────
       - name: "1 · שאלון שבועי — טלגרם"
+        if: ${{ !inputs.skip_bot }}
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
