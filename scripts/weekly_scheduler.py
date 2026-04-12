@@ -147,16 +147,22 @@ def read_plan_json(rotation: dict) -> dict:
     return {}
 
 
-def schedule_already_exists(week_start: date) -> bool:
-    week_end = week_start + timedelta(days=6)
+def delete_week_entries(week_start: date) -> int:
+    """Delete all existing schedule entries for this week. Returns count deleted."""
+    week_end = week_start + timedelta(days=7)
     response = notion.databases.query(
         database_id=WEEKLY_DB_ID,
         filter={"and": [
-            {"property": "Date", "date": {"on_or_after": week_start.isoformat()}},
+            {"property": "Date", "date": {"on_or_after":  week_start.isoformat()}},
             {"property": "Date", "date": {"on_or_before": week_end.isoformat()}},
         ]},
     )
-    return len(response.get("results", [])) > 0
+    pages = response.get("results", [])
+    for page in pages:
+        notion.pages.update(page_id=page["id"], archived=True)
+    if pages:
+        log.info("Deleted %d old entries for week %s.", len(pages), week_start)
+    return len(pages)
 
 
 def mark_schedule_created(rotation_page_id: str) -> None:
@@ -388,9 +394,8 @@ def generate_schedule(dry_run: bool = False) -> None:
     week_start = get_week_start()
     log.info("Generating schedule for week starting %s", week_start)
 
-    if schedule_already_exists(week_start):
-        log.info("Schedule already exists — nothing to do.")
-        return
+    # Always delete old entries and rebuild from latest questionnaire answers
+    delete_week_entries(week_start)
 
     rotation = find_rotation_entry(week_start)
     if rotation is None:
@@ -425,10 +430,6 @@ def generate_schedule(dry_run: bool = False) -> None:
 
     log.info("Week type: %s | Basketball: %s | VR: %d | Plan JSON: %s",
              week_type, basketball_days_raw, vr_count, bool(plan.get("course_view_min")))
-
-    if already_created and not dry_run:
-        log.info("Rotation entry already marked as created — skipping.")
-        return
 
     vr_days    = distribute_vr(basketball_days_raw, vr_count) if week_type == "Home" else set()
     assignments = assign_activities(plan) if week_type == "Home" else {}
