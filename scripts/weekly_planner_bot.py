@@ -128,6 +128,21 @@ def kb_minutes(values: list) -> list:
     return [[{"text": (str(m) + " דק׳") if m else "דלג", "callback_data": f"m:{m}"}
              for m in values]]
 
+
+def kb_wake() -> list:
+    """Wake time keyboard — 3 per row, 05:30–11:00."""
+    times = ["05:30","06:00","06:30","07:00","07:30","08:00",
+             "08:30","09:00","09:30","10:00","10:30","11:00"]
+    rows, row = [], []
+    for t in times:
+        row.append({"text": t, "callback_data": f"c:{t}"})
+        if len(row) == 3:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    return rows
+
 # ── Planner session ───────────────────────────────────────────────────────────
 
 class Planner:
@@ -154,8 +169,7 @@ class Planner:
             "work_days":            [],
             "work_type":            "",
             "work_time_of_day":     "בוקר",
-            "wake_time_work":       "07:00",
-            "wake_time_free":       "09:30",
+            "wake_times":           {},   # {day_en: "HH:MM"} — per-day wake time
             "dad_days":             [],
             "dad_type":             "",
             "grandparents_days":    [],
@@ -228,6 +242,20 @@ class Planner:
                 answer_cb(cb_id, "✅")
                 edit(msg_id, f"{q}\n\n<i>✅ {label}</i>")
                 return m
+            answer_cb(cb_id)
+
+    def ask_wake_time(self, q: str) -> str:
+        """Wake time picker (3-per-row). Returns 'HH:MM' string."""
+        msg_id = send(q, kb_wake())
+        while True:
+            cb_id, data = self._wait()
+            if cb_id is None:
+                return "09:00"
+            if data and data.startswith("c:"):
+                val = data[2:]
+                answer_cb(cb_id, "✅")
+                edit(msg_id, f"{q}\n\n<i>✅ {val}</i>")
+                return val
             answer_cb(cb_id)
 
     def ask_days(self, q: str) -> list:
@@ -435,19 +463,12 @@ class Planner:
             [0, 20, 30, 45, 60]
         )
 
-        # ── שעת קימה ─────────────────────────────────────────────────────────
-        if p.get("work_days"):
-            p["wake_time_work"] = self.ask_choice(
-                "⏰ <b>שעת קימה בימי עבודה?</b>",
-                [("05:30", "05:30"), ("06:00", "06:00"), ("06:30", "06:30"),
-                 ("07:00", "07:00"), ("07:30", "07:30"), ("08:00", "08:00")]
-            ) or "07:00"
-
-        p["wake_time_free"] = self.ask_choice(
-            "⏰ <b>שעת קימה בימים פנויים?</b>",
-            [("07:30", "07:30"), ("08:00", "08:00"), ("08:30", "08:30"),
-             ("09:00", "09:00"), ("09:30", "09:30"), ("10:00", "10:00")]
-        ) or "09:30"
+        # ── שעת קימה לכל יום ─────────────────────────────────────────────────
+        send("⏰ <b>שעת קימה</b>\nנגדיר לכל יום בנפרד:")
+        time.sleep(0.5)
+        for day_en in DAYS_EN:
+            t = self.ask_wake_time(f"⏰ <b>קימה — יום {DAY_LABEL[day_en]}</b>")
+            p["wake_times"][day_en] = t
 
         # ── חסומים ───────────────────────────────────────────────────────────
         p["blocked_days"] = self.ask_days(
@@ -602,9 +623,11 @@ def _send_summary(plan: dict) -> None:
     sys_type = plan.get("system_type", "") or "—"
     sys_str  = f"{sys_min} דק׳ ({sys_days}—{sys_time}) — {sys_type}" if sys_min else "—"
 
-    # Wake times
-    wake_work = plan.get("wake_time_work", "07:00")
-    wake_free = plan.get("wake_time_free", "09:30")
+    # Wake times per day
+    wake_times = plan.get("wake_times", {})
+    wake_str = "  ".join(
+        f"{DAY_LABEL[d]}{wake_times[d]}" for d in DAYS_EN if d in wake_times
+    ) or "—"
 
     lines = [
         f"✅ <b>שבוע {next_mon.strftime('%d/%m')} נשמר!</b>\n",
@@ -617,7 +640,7 @@ def _send_summary(plan: dict) -> None:
         f"💻 מערכת: {sys_str}",
         f"💼 עבודה: {work_str}",
         f"👬 חברים: {friends_str}",
-        f"⏰ קימה: עבודה {wake_work} | חופשי {wake_free}",
+        f"⏰ קימה: {wake_str}",
         f"📖 ספר: {plan.get('book_min',0)} דק׳ ביום",
         f"⛔ חסומים: {blocked}",
         "",

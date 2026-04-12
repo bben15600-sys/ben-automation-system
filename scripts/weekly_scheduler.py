@@ -289,8 +289,9 @@ def build_home_day(
     system_days          = set(plan.get("system_days", []))
     system_time          = plan.get("system_time", "בוקר")
     work_time_of_day     = plan.get("work_time_of_day", "בוקר")
-    wake_time_work       = plan.get("wake_time_work", "07:00")
-    wake_time_free       = plan.get("wake_time_free", "09:30")
+    # Per-day wake times (new) — fall back to old work/free fields or default
+    _wake_times          = plan.get("wake_times", {})
+    _default_wake        = plan.get("wake_time_free", "09:30")
 
     has_basketball   = day_en in basketball_days
     has_tennis       = day_en in TENNIS_DAYS
@@ -334,17 +335,17 @@ def build_home_day(
     _FRIENDS_LABELS = {"ערב": "ערב", "קפה": "☕ קפה", "יציאה": "🎯 יציאה"}
     friends_label = _FRIENDS_LABELS.get(friends_type, friends_type)
 
-    # ── Wake time ─────────────────────────────────────────────────────────────
-    wake_time   = wake_time_work if has_work else wake_time_free
+    # ── Wake time (per-day) ───────────────────────────────────────────────────
+    wake_time   = _wake_times.get(day_en, _default_wake)
     wake_prefix = f"☀️ קימה {wake_time}"
 
     # ── Morning ──────────────────────────────────────────────────────────────
     if day_index == 0:        # Monday — returning home from base
-        morning = "🏠 הגעה הביתה — אוכל, בוקר"
+        morning = "🏠 הגעה הביתה"
     elif day_index == 7:      # Monday (next) — entering base
         morning = "✈️ כניסה לבסיס — התארגנות"
-    elif day_index == 5:      # Saturday
-        morning = "😴 שינה / מנוחה מלאה"
+    elif day_index == 5:      # Saturday — show personalised wake time
+        morning = f"{wake_prefix}\n😴 שינה / מנוחה מלאה"
     elif has_work and work_time_of_day == "בוקר":
         morning = f"{wake_prefix}\n💼 עבודה{' — ' + work_label if work_label else ''}"
     elif has_cv and course_view_time == "בוקר":
