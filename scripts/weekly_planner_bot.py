@@ -470,9 +470,9 @@ def _save_to_notion(plan: dict) -> None:
         print(f"WARNING: DB schema check/update failed: {e}")
 
     next_mon  = _get_next_monday()
-    week_end  = next_mon + timedelta(days=7)  # Mon to next Mon (8 days)
+    week_end  = next_mon + timedelta(days=7)
 
-    # Check if entry already exists
+    # Archive ALL existing entries for this week — ensures only one fresh entry exists
     try:
         existing = notion.databases.query(
             database_id=db_id,
@@ -481,25 +481,13 @@ def _save_to_notion(plan: dict) -> None:
                 {"property": "Date", "date": {"on_or_before": week_end.isoformat()}},
             ]},
         )
-        if existing.get("results"):
-            page_id = existing["results"][0]["id"]
-            print(f"Entry already exists for {next_mon} — updating all fields…")
-            basketball_days_upd = list(dict.fromkeys(
-                plan.get("basketball_days", []) + plan.get("basketball_optional", [])
-            ))
-            notion.pages.update(
-                page_id=page_id,
-                properties={
-                    "Week Type":       {"select": {"name": plan["week_type"]}},
-                    "Basketball Days": {"multi_select": [{"name": d} for d in basketball_days_upd]},
-                    "Plan JSON":       {"rich_text": [{"text": {"content": json.dumps(plan, ensure_ascii=False)[:2000]}}]},
-                }
-            )
-            print(f"✅ Updated all fields for {next_mon}")
-            return
+        for page in existing.get("results", []):
+            notion.pages.update(page_id=page["id"], archived=True)
+            print(f"Archived old rotation entry {page['id']}")
     except Exception as e:
-        print(f"WARNING: existing-entry query failed: {e}")
+        print(f"WARNING: cleanup of existing entries failed: {e}")
 
+    # Create a single fresh entry with all current plan data
     basketball_days = list(dict.fromkeys(
         plan.get("basketball_days", []) + plan.get("basketball_optional", [])
     ))
@@ -514,18 +502,10 @@ def _save_to_notion(plan: dict) -> None:
             "Basketball Days":  {"multi_select": [{"name": d} for d in basketball_days]},
             "VR Events Count":  {"number": 0},
             "Schedule Created": {"checkbox": False},
+            "Plan JSON":        {"rich_text": [{"text": {"content": plan_json_str[:2000]}}]},
         },
     )
-    page_id = result["id"]
-    print(f"✅ Page created: {page_id}")
-
-    notion.pages.update(
-        page_id=page_id,
-        properties={
-            "Plan JSON": {"rich_text": [{"text": {"content": plan_json_str[:2000]}}]},
-        }
-    )
-    print(f"✅ Plan JSON saved to Notion for week of {next_mon}")
+    print(f"✅ Fresh rotation entry created: {result['id']} for week of {next_mon}")
 
 
 def _send_summary(plan: dict) -> None:
