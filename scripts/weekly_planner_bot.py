@@ -35,9 +35,9 @@ ROTATION_DB_ID = _clean(os.environ.get("ROTATION_DB_ID", "29d51fc8-512b-4415-97c
 
 TIMEOUT_SECS = 25 * 60
 
-DAYS_EN   = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-DAY_LABEL = {"Sun": "א׳", "Mon": "ב׳", "Tue": "ג׳", "Wed": "ד׳",
-             "Thu": "ה׳", "Fri": "ו׳", "Sat": "ש׳"}
+DAYS_EN   = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+DAY_LABEL = {"Mon": "ב׳", "Tue": "ג׳", "Wed": "ד׳", "Thu": "ה׳",
+             "Fri": "ו׳", "Sat": "ש׳", "Sun": "א׳"}
 
 # ── Telegram API ──────────────────────────────────────────────────────────────
 
@@ -448,25 +448,9 @@ def _save_to_notion(plan: dict) -> None:
     from notion_client import Client
     notion = Client(auth=NOTION_TOKEN)
 
-    # Debug: who is the integration connected to?
-    try:
-        me = notion.users.me()
-        print(f"Notion user: {me.get('name')} / {me.get('type')} / bot={me.get('bot',{})}")
-    except Exception as e:
-        print(f"Could not get notion user: {e}")
-
     # Resolve real DB id (handles page-id-as-db-id issue)
     db_id = _resolve_db_id(notion, ROTATION_DB_ID)
     print(f"Using DB ID: {db_id}")
-    try:
-        db_info = notion.databases.retrieve(database_id=db_id)
-        title_parts = db_info.get("title", [])
-        db_name = title_parts[0]["plain_text"] if title_parts else "Unknown"
-        print(f"DB name: {db_name}")
-        workspace = db_info.get("url", "")
-        print(f"DB url: {workspace}")
-    except Exception as e:
-        print(f"Could not get DB name: {e}")
 
     # Ensure "Plan JSON" rich_text property exists in the DB schema
     try:
@@ -555,7 +539,7 @@ def _send_summary(plan: dict) -> None:
         f"📖 ספר: {plan.get('book_min',0)} דק׳ ביום",
         f"⛔ חסומים: {blocked}",
         "",
-        "<i>לו\"ז מפורט ייווצר ביום שני בבוקר.</i>",
+        "<i>הלוז נוצר עכשיו — תוך שניות תקבל קישור לאתר.</i>",
     ]
     send("\n".join(lines))
 

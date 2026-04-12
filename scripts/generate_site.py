@@ -58,9 +58,12 @@ WEEKLY_DB_ID = resolve_db_id(WEEKLY_DB_ID)
 
 
 def get_week_start() -> date:
-    """Return the most recent Monday."""
+    """Return this week's Monday. When run on Sunday (cron night), return tomorrow."""
     today = date.today()
-    return today - timedelta(days=today.weekday())  # weekday() 0=Mon
+    wd = today.weekday()  # Mon=0 … Sun=6
+    if wd == 6:
+        return today + timedelta(days=1)
+    return today - timedelta(days=wd)
 
 
 def fetch_week(week_start: date) -> list[dict]:

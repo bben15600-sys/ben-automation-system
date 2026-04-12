@@ -110,7 +110,11 @@ def create_weekly_schedule_db(parent_page_id: str) -> str:
 
 def get_week_start() -> date:
     today = date.today()
-    return today - timedelta(days=today.weekday())  # weekday() 0=Mon
+    wd = today.weekday()  # Mon=0 … Sun=6
+    if wd == 6:
+        # Running on Sunday (e.g. Sunday-night cron): the upcoming week starts tomorrow
+        return today + timedelta(days=1)
+    return today - timedelta(days=wd)
 
 
 def find_rotation_entry(week_start: date) -> dict | None:
