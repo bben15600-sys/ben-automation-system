@@ -276,6 +276,10 @@ def build_home_day(
     blocked_days       = set(plan.get("blocked_days", []))
     dad_days           = set(plan.get("dad_days", []))
     grandparents_days  = set(plan.get("grandparents_days", []))
+    work_days          = set(plan.get("work_days", []))
+    work_type          = plan.get("work_type", "")
+    friends_days       = set(plan.get("friends_days", []))
+    friends_type       = plan.get("friends_type", "")
 
     has_basketball   = day_en in basketball_days
     has_tennis       = day_en in TENNIS_DAYS
@@ -283,8 +287,9 @@ def build_home_day(
     has_vr           = day_en in vr_days
     has_blocked      = day_en in blocked_days
     has_dad          = day_en in dad_days
-    has_grandparents = day_en in vr_days  # kept for VR; grandparents handled below
     has_grandparents = day_en in grandparents_days
+    has_work         = day_en in work_days
+    has_friends      = day_en in friends_days
 
     day_asgn      = assignments.get(day_en, {})
     has_cv        = day_asgn.get("course_view", False)
@@ -297,6 +302,17 @@ def build_home_day(
 
     # day_index: 0=Mon 1=Tue 2=Wed 3=Thu 4=Fri 5=Sat 6=Sun 7=Mon(next/base)
 
+    # ── Work type label ───────────────────────────────────────────────────────
+    _WORK_LABELS = {
+        "משמרת": "משמרת", "ספונטנית": "ספונטנית",
+        "עם-נסיעות": "עם נסיעות", "קצרה": "קצרה",
+    }
+    work_label = _WORK_LABELS.get(work_type, work_type)
+
+    # ── Friends evening label ──────────────────────────────────────────────────
+    _FRIENDS_LABELS = {"ערב": "ערב", "קפה": "☕ קפה", "יציאה": "🎯 יציאה"}
+    friends_label = _FRIENDS_LABELS.get(friends_type, friends_type)
+
     # ── Morning ──────────────────────────────────────────────────────────────
     if day_index == 0:        # Monday — returning home from base
         morning = "🏠 הגעה הביתה — אוכל, בוקר"
@@ -304,7 +320,9 @@ def build_home_day(
         morning = "✈️ כניסה לבסיס — התארגנות"
     elif day_index == 5:      # Saturday
         morning = "😴 שינה / מנוחה מלאה"
-    elif day_index == 4:      # Friday
+    elif has_work:
+        morning = f"💼 עבודה{' — ' + work_label if work_label else ''}"
+    elif day_index == 4:      # Friday (non-work)
         morning = "☀️ קימה 09:30 — ארוחת בוקר"
     elif has_cv:
         morning = f"☀️ קימה 09:30 — 🎬 קורס צפייה ({cv_min} דק׳)"
@@ -349,6 +367,8 @@ def build_home_day(
         evening = "🥽 אירוע VR — Enjoy VR"
     elif has_lihi:
         evening = "💛 ליהי"
+    elif has_friends:
+        evening = f"👬 חברים{' — ' + friends_label if friends_label else ''}"
     else:
         evening = "🌙 זמן חופשי"
 
@@ -403,10 +423,9 @@ def generate_schedule(dry_run: bool = False) -> None:
         sys.exit(1)
 
     props = rotation["properties"]
-    week_type: str        = props["Week Type"]["select"]["name"]
-    basketball_days_raw   = [opt["name"] for opt in props["Basketball Days"]["multi_select"]]
-    vr_count: int         = props["VR Events Count"]["number"] or 0
-    already_created: bool = props["Schedule Created"]["checkbox"]
+    week_type: str      = props["Week Type"]["select"]["name"]
+    basketball_days_raw = [opt["name"] for opt in props["Basketball Days"]["multi_select"]]
+    vr_count: int       = props["VR Events Count"]["number"] or 0
 
     # Load rich plan data if available (written by telegram_collect.py)
     plan = read_plan_json(rotation)
@@ -419,9 +438,13 @@ def generate_schedule(dry_run: bool = False) -> None:
             "course_view_min":     0,
             "course_practice_min": 0,
             "system_min":          0,
+            "work_days":           [],
+            "work_type":           "",
             "dad_days":            [],
             "grandparents_days":   [],
             "friends_count":       0,
+            "friends_days":        [],
+            "friends_type":        "",
             "blocked_days":        [],
         }
     else:

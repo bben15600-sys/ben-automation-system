@@ -152,6 +152,7 @@ class Planner:
             "grandparents_days":   [],
             "friends_count":       0,
             "friends_type":        "",
+            "friends_days":        [],
             "personal_activities": [],
             "book_min":            0,
             "blocked_days":        [],
@@ -386,6 +387,7 @@ class Planner:
                 "👬 <b>סוג מפגש?</b>",
                 [("🌙 ערב", "ערב"), ("☕ קפה", "קפה"), ("🎯 יציאה", "יציאה")]
             )
+            p["friends_days"] = self.ask_days("👬 <b>באיזה ימים?</b>")
 
         # ── זמן לעצמי ────────────────────────────────────────────────────────
         p["personal_activities"] = self.ask_multi(
@@ -522,11 +524,20 @@ def _save_to_notion(plan: dict) -> None:
 
 
 def _send_summary(plan: dict) -> None:
-    lihi    = " ".join(DAY_LABEL[d] for d in plan.get("lihi_days", []))    or "—"
-    bball   = " ".join(DAY_LABEL[d] for d in plan.get("basketball_days", [])) or "—"
-    tennis  = " ".join(DAY_LABEL[d] for d in plan.get("tennis_days", []))  or "—"
-    blocked = " ".join(DAY_LABEL[d] for d in plan.get("blocked_days", [])) or "—"
+    lihi         = " ".join(DAY_LABEL[d] for d in plan.get("lihi_days", []))       or "—"
+    bball        = " ".join(DAY_LABEL[d] for d in plan.get("basketball_days", [])) or "—"
+    tennis       = " ".join(DAY_LABEL[d] for d in plan.get("tennis_days", []))     or "—"
+    blocked      = " ".join(DAY_LABEL[d] for d in plan.get("blocked_days", []))    or "—"
+    work_days    = " ".join(DAY_LABEL[d] for d in plan.get("work_days", []))       or "—"
+    friends_days = " ".join(DAY_LABEL[d] for d in plan.get("friends_days", []))    or "—"
     next_mon = _get_next_monday()
+
+    work_type = plan.get("work_type", "") or "—"
+    work_str  = f"{work_days} ({work_type})" if plan.get("work_days") else "—"
+
+    fc = plan.get("friends_count", 0)
+    ft = plan.get("friends_type", "") or "—"
+    friends_str = f"{fc} מפגשים ({ft}) — {friends_days}" if fc else "—"
 
     lines = [
         f"✅ <b>שבוע {next_mon.strftime('%d/%m')} נשמר!</b>\n",
@@ -536,6 +547,8 @@ def _send_summary(plan: dict) -> None:
         f"🎾 טניס: {tennis}",
         f"🎬 קורס: {plan.get('course_view_min',0)} דק׳ צפייה + {plan.get('course_practice_min',0)} דק׳ תרגול",
         f"💻 מערכת: {plan.get('system_min',0)} דק׳ ({plan.get('system_type','') or '—'})",
+        f"💼 עבודה: {work_str}",
+        f"👬 חברים: {friends_str}",
         f"📖 ספר: {plan.get('book_min',0)} דק׳ ביום",
         f"⛔ חסומים: {blocked}",
         "",
