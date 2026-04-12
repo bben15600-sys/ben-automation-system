@@ -125,13 +125,14 @@ def find_rotation_entry(week_start: date) -> dict | None:
             {"property": "Date", "date": {"on_or_after": week_start.isoformat()}},
             {"property": "Date", "date": {"on_or_before": week_end.isoformat()}},
         ]},
+        sorts=[{"timestamp": "last_edited_time", "direction": "descending"}],
     )
     results = response.get("results", [])
     if not results:
         log.warning("No rotation entry for %s – %s", week_start, week_end)
         return None
     if len(results) > 1:
-        log.warning("Multiple rotation entries — using first.")
+        log.warning("Multiple rotation entries (%d) — using most recently edited.", len(results))
     return results[0]
 
 

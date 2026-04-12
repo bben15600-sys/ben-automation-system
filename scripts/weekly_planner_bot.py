@@ -483,14 +483,19 @@ def _save_to_notion(plan: dict) -> None:
         )
         if existing.get("results"):
             page_id = existing["results"][0]["id"]
-            print(f"Entry already exists for {next_mon} — updating Plan JSON…")
+            print(f"Entry already exists for {next_mon} — updating all fields…")
+            basketball_days_upd = list(dict.fromkeys(
+                plan.get("basketball_days", []) + plan.get("basketball_optional", [])
+            ))
             notion.pages.update(
                 page_id=page_id,
                 properties={
-                    "Plan JSON": {"rich_text": [{"text": {"content": json.dumps(plan, ensure_ascii=False)[:2000]}}]},
+                    "Week Type":       {"select": {"name": plan["week_type"]}},
+                    "Basketball Days": {"multi_select": [{"name": d} for d in basketball_days_upd]},
+                    "Plan JSON":       {"rich_text": [{"text": {"content": json.dumps(plan, ensure_ascii=False)[:2000]}}]},
                 }
             )
-            print(f"✅ Updated Plan JSON for {next_mon}")
+            print(f"✅ Updated all fields for {next_mon}")
             return
     except Exception as e:
         print(f"WARNING: existing-entry query failed: {e}")
