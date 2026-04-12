@@ -2,11 +2,9 @@ name: Weekly Planner → Notion → Site → Telegram
 
 on:
   schedule:
-    # Every Sunday at 20:00 Israel time (UTC+3 summer = 17:00 UTC)
+    # Backup cron (primary trigger is Google Cloud Scheduler via workflow_dispatch)
     - cron: "0 17 * * 0"
-    # TEST — remove after test (06:20 UTC = 09:20 Israel)
-    - cron: "20 6 12 4 *"
-  workflow_dispatch:
+  workflow_dispatch:   # triggered by Cloud Function every Sunday 17:00 UTC
 
 permissions:
   contents: write
