@@ -36,6 +36,7 @@ jobs:
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
           NOTION_TOKEN:       ${{ secrets.NOTION_TOKEN }}
           ROTATION_DB_ID:     ${{ secrets.ROTATION_DB_ID }}
+          WEEKLY_DB_ID:       ${{ secrets.WEEKLY_DB_ID }}
         run: python scripts/weekly_planner_bot.py
 
       # ── Step 2: Build weekly schedule in Notion ───────────────────────────

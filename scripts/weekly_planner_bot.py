@@ -32,6 +32,7 @@ CHAT_ID        = _clean(os.environ["TELEGRAM_CHAT_ID"])
 API            = f"https://api.telegram.org/bot{BOT_TOKEN}"
 NOTION_TOKEN   = os.environ.get("NOTION_TOKEN", "").strip()
 ROTATION_DB_ID = _clean(os.environ.get("ROTATION_DB_ID", "29d51fc8-512b-4415-97c8-67121564b4f2"))
+WEEKLY_DB_ID   = _clean(os.environ.get("WEEKLY_DB_ID", ""))
 
 TIMEOUT_SECS = 25 * 60
 
@@ -541,9 +542,52 @@ def _send_summary(plan: dict) -> None:
     ]
     send("\n".join(lines))
 
+# ── Cleanup ───────────────────────────────────────────────────────────────────
+
+def _clear_old_data() -> None:
+    """
+    Run at the START of a new questionnaire.
+    Archives old rotation entries and weekly schedule entries for next week
+    so the scheduler always builds from the freshest data.
+    """
+    if not NOTION_TOKEN:
+        return
+    try:
+        from notion_client import Client
+        notion = Client(auth=NOTION_TOKEN)
+        next_mon = _get_next_monday()
+        week_end = next_mon + timedelta(days=7)
+        date_filter = {"and": [
+            {"property": "Date", "date": {"on_or_after":  next_mon.isoformat()}},
+            {"property": "Date", "date": {"on_or_before": week_end.isoformat()}},
+        ]}
+
+        # Archive rotation entries
+        rot_id = _clean(os.environ.get("ROTATION_DB_ID", ROTATION_DB_ID))
+        rot_id = _resolve_db_id(notion, rot_id)
+        for page in notion.databases.query(database_id=rot_id, filter=date_filter).get("results", []):
+            notion.pages.update(page_id=page["id"], archived=True)
+            print(f"Cleared rotation entry {page['id']}")
+
+        # Archive weekly schedule entries
+        if WEEKLY_DB_ID:
+            from re import sub as _sub
+            wid = _sub(r'\s', '', os.environ.get("WEEKLY_DB_ID", WEEKLY_DB_ID))
+            for page in notion.databases.query(database_id=wid, filter=date_filter).get("results", []):
+                notion.pages.update(page_id=page["id"], archived=True)
+                print(f"Cleared schedule entry {page['id']}")
+
+        print(f"✅ Old data cleared for week of {next_mon}")
+    except Exception as e:
+        print(f"WARNING: could not clear old data: {e}")
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def main():
+    # Clear all stale data before the user starts answering
+    _clear_old_data()
+
     planner = Planner()
     plan = planner.run()
 
