@@ -1,0 +1,79 @@
+name: רענן אתר (ללא שאלון)
+
+on:
+  workflow_dispatch:   # הפעלה ידנית בלבד
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      # ── Step 1: Build weekly schedule in Notion ───────────────────────────
+      - name: "1 · יצירת לוז שבועי ב-Notion"
+        env:
+          NOTION_TOKEN:    ${{ secrets.NOTION_TOKEN }}
+          ROTATION_DB_ID:  ${{ secrets.ROTATION_DB_ID }}
+          WEEKLY_DB_ID:    ${{ secrets.WEEKLY_DB_ID }}
+        run: python scripts/weekly_scheduler.py
+
+      # ── Step 2: Generate site HTML ────────────────────────────────────────
+      - name: "2 · יצירת אתר הלוז"
+        env:
+          NOTION_TOKEN:  ${{ secrets.NOTION_TOKEN }}
+          WEEKLY_DB_ID:  ${{ secrets.WEEKLY_DB_ID }}
+        run: python scripts/generate_site.py
+
+      # ── Step 3: Deploy to GitHub Pages ────────────────────────────────────
+      - name: "3 · פריסה ל-GitHub Pages"
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+          git diff --cached --quiet || git commit -m "Deploy weekly schedule site [skip ci]"
+          git pull --rebase origin master
+          git push origin master
+
+      # ── Step 4: Wait for GitHub Pages to deploy ───────────────────────────
+      - name: "4 · המתנה לפריסת GitHub Pages"
+        run: sleep 120
+
+      # ── Step 5: Send Telegram link ────────────────────────────────────────
+      - name: "5 · שליחת קישור לאתר בטלגרם"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'EOF'
+          import os, json, time, urllib.request
+          token   = os.environ["TELEGRAM_BOT_TOKEN"].strip().replace(" ", "").replace("\n", "")
+          chat_id = os.environ["TELEGRAM_CHAT_ID"].strip().replace(" ", "").replace("\n", "")
+          url     = f"https://api.telegram.org/bot{token}/sendMessage"
+          ts      = int(time.time())
+          site    = f"https://bben15600-sys.github.io/ben-automation-system/?t={ts}"
+          msg = (
+            "🔄 <b>האתר עודכן מחדש!</b>\n\n"
+            f"🔗 <a href='{site}'>לחץ כאן לצפייה</a>"
+          )
+          payload = json.dumps({
+            "chat_id": chat_id,
+            "text": msg,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": False,
+          }).encode()
+          req = urllib.request.Request(url, data=payload,
+                                       headers={"Content-Type": "application/json"})
+          urllib.request.urlopen(req)
+          print("✅ Telegram link sent")
+          EOF
