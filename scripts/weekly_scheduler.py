@@ -373,7 +373,10 @@ def build_home_day(
             aft = "12:30 — 🍽 ארוחת צהריים\n14:00 — 🌿 זמן חופשי"
         if has_basketball:
             free_s = _time_add(bball_start, -120)
-            eve = f"{free_s} — 🌙 זמן חופשי\n{bball_start} — 🏀 כדורסל\n{bball_end} — 🏠 בית"
+            if has_dad:
+                eve = f"{free_s} — 🌙 זמן חופשי\n{bball_start} — 🏀 כדורסל\n{dad_start} — 👨‍👦 מפגש אבא"
+            else:
+                eve = f"{free_s} — 🌙 זמן חופשי\n{bball_start} — 🏀 כדורסל\n{bball_end} — 🏠 בית"
         elif has_lihi:
             eve = f"{lihi_start} — 💛 ליהי\n23:00 — 😴 שינה"
         elif has_vr:
@@ -429,7 +432,7 @@ def build_home_day(
             a.append(f"{t_start} — 🎾 טניס")
         elif has_grandparents:
             a.append(f"{gp_start} — 👵 ביקור סבא וסבתא")
-        elif has_dad and not has_lihi:
+        elif has_dad and not has_lihi and not has_basketball:
             a.append(f"{dad_start} — 👨‍👦 מפגש אבא")
         elif has_cp and course_practice_time == "צהריים":
             a.append(f"14:00 — 🎬 תרגול קורס ({cp_min} דק׳)")
@@ -455,7 +458,12 @@ def build_home_day(
             e.append("23:00 — 😴 שינה")
         elif has_basketball:
             free_s = _time_add(bball_start, -120)
-            e.extend([f"{free_s} — 🌙 זמן חופשי", f"{bball_start} — 🏀 כדורסל", f"{bball_end} — 🏠 בית"])
+            e.append(f"{free_s} — 🌙 זמן חופשי")
+            e.append(f"{bball_start} — 🏀 כדורסל")
+            if has_dad:
+                e.append(f"{dad_start} — 👨‍👦 מפגש אבא")  # dad follows basketball
+            else:
+                e.append(f"{bball_end} — 🏠 בית")
         elif has_vr:
             e.extend([f"{vr_start} — 🥽 אירוע VR — Enjoy VR", "23:00 — 😴 שינה"])
         elif has_cp and course_practice_time == "ערב":
