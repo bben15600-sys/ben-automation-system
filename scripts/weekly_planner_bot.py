@@ -554,6 +554,76 @@ class Planner:
 
         return p
 
+# ── Conflict detection + resolution ──────────────────────────────────────────
+
+def _t2m(t: str) -> int:
+    """'HH:MM' → minutes since midnight. Returns -1 on bad input."""
+    try:
+        h, m = map(int, t.split(":"))
+        return h * 60 + m
+    except Exception:
+        return -1
+
+
+def _m2t(mins: int) -> str:
+    return f"{mins // 60:02d}:{mins % 60:02d}"
+
+
+# activity_key → (start_plan_key, end_plan_key, display_label, default_start, default_end, days_plan_key)
+_ACT = {
+    "basketball":   ("basketball_time_start",    "basketball_time_end",    "🏀 כדורסל",    "20:00", "22:30", "basketball_days"),
+    "tennis":       ("tennis_time_start",         "tennis_time_end",        "🎾 טניס",      "15:00", "17:00", "tennis_days"),
+    "lihi":         ("lihi_time_start",           "lihi_time_end",          "💛 ליהי",      "18:00", "23:00", "lihi_days"),
+    "dad":          ("dad_time_start",            "dad_time_end",           "👨‍👦 אבא",      "18:00", "21:00", "dad_days"),
+    "grandparents": ("grandparents_time_start",   "grandparents_time_end",  "👵 סבא/סבתא",  "17:00", "20:00", "grandparents_days"),
+    "friends":      ("friends_time_start",        "friends_time_end",       "👬 חברים",     "20:00", "23:00", "friends_days"),
+    "work":         ("work_time_start",           "work_time_end",          "💼 עבודה",     "09:00", "17:00", "work_days"),
+}
+
+
+def _detect_conflicts(plan: dict) -> tuple[list[str], set[str]]:
+    """Return (human-readable list of conflicts, set of involved activity keys)."""
+    conflicts: list[str] = []
+    involved: set[str]   = set()
+
+    for day in DAYS_EN:
+        events = []
+        for key, (sk, ek, label, ds, de, dkey) in _ACT.items():
+            if day not in plan.get(dkey, []):
+                continue
+            s = _t2m(plan.get(sk) or ds)
+            e = _t2m(plan.get(ek) or de)
+            if s < 0 or e < 0:
+                continue
+            events.append((s, e, label, key))
+
+        events.sort(key=lambda x: x[0])
+
+        for i in range(len(events)):
+            for j in range(i + 1, len(events)):
+                s1, e1, l1, k1 = events[i]
+                s2, e2, l2, k2 = events[j]
+                if s1 < e2 and s2 < e1:    # overlap
+                    conflicts.append(
+                        f"יום {DAY_LABEL[day]}: {l1} ({_m2t(s1)}–{_m2t(e1)}) ↔ {l2} ({_m2t(s2)}–{_m2t(e2)})"
+                    )
+                    involved.update({k1, k2})
+
+    return conflicts, involved
+
+
+def _fix_conflicts(planner, plan: dict, involved: set[str]) -> None:
+    """Re-ask start/end times for each conflicting activity."""
+    send("✏️ <b>ערוך שעות לפעילויות המתנגשות:</b>")
+    time.sleep(0.5)
+    for key in sorted(involved):
+        if key not in _ACT:
+            continue
+        sk, ek, label, ds, de, _ = _ACT[key]
+        plan[sk] = planner.ask_time(f"{label} — מאיזה שעה?", ds)
+        plan[ek] = planner.ask_time(f"{label} — עד איזה שעה?", de)
+
+
 # ── Notion ────────────────────────────────────────────────────────────────────
 
 def _get_next_monday() -> date:
@@ -760,6 +830,22 @@ def main():
     if plan is None:
         send("⏰ <b>פג הזמן (25 דקות)</b>\nשלח /start לבוט כדי להתחיל מחדש, ואז הפעל את ה-workflow ידנית.")
         sys.exit(1)
+
+    # ── Conflict check + resolution loop ──────────────────────────────────────
+    for _attempt in range(5):
+        conflicts, involved = _detect_conflicts(plan)
+        if not conflicts:
+            break
+        msg = "⚠️ <b>זיהיתי התנגשויות בלוח:</b>\n\n"
+        msg += "\n".join(f"• {c}" for c in conflicts)
+        msg += "\n\nמה לעשות?"
+        choice = planner.ask_choice(msg, [
+            ("✅ שמור בכל זאת", "save"),
+            ("✏️ ערוך שעות",   "edit"),
+        ])
+        if choice != "edit":
+            break
+        _fix_conflicts(planner, plan, involved)
 
     _save_to_notion(plan)
     _send_summary(plan)
