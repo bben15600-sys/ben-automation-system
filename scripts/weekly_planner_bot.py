@@ -557,9 +557,12 @@ class Planner:
 # ── Notion ────────────────────────────────────────────────────────────────────
 
 def _get_next_monday() -> date:
+    """Return the Monday of the current week (or next Monday if today is Sunday)."""
     today = date.today()
-    diff  = (7 - today.weekday()) % 7  # days until Monday
-    return today + timedelta(days=diff if diff > 0 else 7)
+    wd = today.weekday()  # Mon=0 … Sun=6
+    if wd == 6:
+        return today + timedelta(days=1)   # Sunday → tomorrow
+    return today - timedelta(days=wd)      # Mon–Sat → this week's Monday
 
 
 def _resolve_db_id(notion, id_or_page: str) -> str:
