@@ -298,8 +298,10 @@ def build_home_day(
     _wake_times          = plan.get("wake_times", {})
     _default_wake        = plan.get("wake_time_free", "09:30")
 
+    tennis_days      = set(plan.get("tennis_days", list(TENNIS_DAYS)))
+
     has_basketball   = day_en in basketball_days
-    has_tennis       = day_en in TENNIS_DAYS
+    has_tennis       = day_en in tennis_days
     has_lihi         = day_en in lihi_days
     has_vr           = day_en in vr_days
     has_blocked      = day_en in blocked_days
@@ -431,7 +433,9 @@ def build_home_day(
             t_start = plan.get("tennis_time_start", "") or "15:00"
             a.append(f"{t_start} — 🎾 טניס")
         elif has_grandparents:
-            a.append(f"{gp_start} — 👵 ביקור סבא וסבתא")
+            # Push grandparents start past morning activities if needed
+            gp_display = gp_start if gp_start > morning_end else morning_end
+            a.append(f"{gp_display} — 👵 ביקור סבא וסבתא")
         elif has_dad and not has_lihi and not has_basketball:
             a.append(f"{dad_start} — 👨‍👦 מפגש אבא")
         elif has_cp and course_practice_time == "צהריים":
