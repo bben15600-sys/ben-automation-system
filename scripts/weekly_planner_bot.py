@@ -175,13 +175,16 @@ class Planner:
             "tennis_days":          [],
             "course_view_min":      0,
             "course_view_days":     [],
+            "course_view_per_day":  {},   # {day_en: minutes}
             "course_view_time":     "בוקר",
             "course_practice_min":  0,
             "course_practice_days": [],
+            "course_practice_per_day": {},
             "course_practice_time": "צהריים",
             "system_min":           0,
             "system_type":          "",
             "system_days":          [],
+            "system_per_day":       {},
             "system_time":          "בוקר",
             "work_days":            [],
             "work_type":            "",
@@ -427,24 +430,45 @@ class Planner:
             p["tennis_time_start"] = self.ask_time("🎾 <b>טניס — מאיזה שעה?</b>", "18:00")
             p["tennis_time_end"]   = self.ask_time("🎾 <b>טניס — עד איזה שעה?</b>", "20:00")
 
-        # ── קורס עריכה ───────────────────────────────────────────────────────
+        # ── קורס עריכה — צפייה ───────────────────────────────────────────────
         p["course_view_min"] = self.ask_minutes(
-            "🎬 <b>קורס עריכה — צפייה</b>\nסה״כ כמה דקות השבוע?",
+            "🎬 <b>קורס עריכה — צפייה</b>\nסה״כ כמה דקות השבוע? (0 = דלג)",
             [0, 60, 90, 120, 150]
         )
         if p["course_view_min"] > 0:
-            p["course_view_days"] = self.ask_days("🎬 <b>צפייה — באיזה ימים?</b>")
+            days = self.ask_days("🎬 <b>צפייה — באיזה ימים?</b>")
+            p["course_view_days"] = days
+            per_day: dict = {}
+            for d in days:
+                m = self.ask_minutes(
+                    f"🎬 <b>צפייה יום {DAY_LABEL[d]}</b> — כמה דקות?",
+                    [30, 45, 60, 90, 120]
+                )
+                per_day[d] = m if m else p["course_view_min"] // max(len(days), 1)
+            p["course_view_per_day"] = per_day
+            p["course_view_min"]     = sum(per_day.values())
             p["course_view_time"] = self.ask_choice(
                 "🎬 <b>צפייה — באיזה חלק ביום?</b>",
                 [("☀️ בוקר", "בוקר"), ("🌤 צהריים", "צהריים")]
             ) or "בוקר"
 
+        # ── קורס עריכה — תרגול ───────────────────────────────────────────────
         p["course_practice_min"] = self.ask_minutes(
-            "🎬 <b>קורס עריכה — תרגול</b>\nסה״כ כמה דקות השבוע?",
+            "🎬 <b>קורס עריכה — תרגול</b>\nסה״כ כמה דקות השבוע? (0 = דלג)",
             [0, 30, 60, 90, 120]
         )
         if p["course_practice_min"] > 0:
-            p["course_practice_days"] = self.ask_days("🎬 <b>תרגול — באיזה ימים?</b>")
+            days = self.ask_days("🎬 <b>תרגול — באיזה ימים?</b>")
+            p["course_practice_days"] = days
+            per_day = {}
+            for d in days:
+                m = self.ask_minutes(
+                    f"🎬 <b>תרגול יום {DAY_LABEL[d]}</b> — כמה דקות?",
+                    [20, 30, 45, 60, 90]
+                )
+                per_day[d] = m if m else p["course_practice_min"] // max(len(days), 1)
+            p["course_practice_per_day"] = per_day
+            p["course_practice_min"]     = sum(per_day.values())
             p["course_practice_time"] = self.ask_choice(
                 "🎬 <b>תרגול — באיזה חלק ביום?</b>",
                 [("🌤 צהריים", "צהריים"), ("🌙 ערב", "ערב")]
@@ -452,7 +476,7 @@ class Planner:
 
         # ── מערכת ────────────────────────────────────────────────────────────
         p["system_min"] = self.ask_minutes(
-            "💻 <b>עבודה על המערכת</b>\nסה״כ כמה דקות השבוע?",
+            "💻 <b>עבודה על המערכת</b>\nסה״כ כמה דקות השבוע? (0 = דלג)",
             [0, 30, 60, 90, 120]
         )
         if p["system_min"] > 0:
@@ -464,7 +488,17 @@ class Planner:
                  ("🧪 בדיקות", "בדיקות"),
                  ("🎨 UI", "שיפור-UI")]
             )
-            p["system_days"] = self.ask_days("💻 <b>מערכת — באיזה ימים?</b>")
+            days = self.ask_days("💻 <b>מערכת — באיזה ימים?</b>")
+            p["system_days"] = days
+            per_day = {}
+            for d in days:
+                m = self.ask_minutes(
+                    f"💻 <b>מערכת יום {DAY_LABEL[d]}</b> — כמה דקות?",
+                    [20, 30, 45, 60, 90]
+                )
+                per_day[d] = m if m else p["system_min"] // max(len(days), 1)
+            p["system_per_day"] = per_day
+            p["system_min"]     = sum(per_day.values())
             p["system_time"] = self.ask_choice(
                 "💻 <b>מערכת — באיזה חלק ביום?</b>",
                 [("☀️ בוקר", "בוקר"), ("🌤 צהריים", "צהריים"), ("🌙 ערב", "ערב")]

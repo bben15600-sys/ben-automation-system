@@ -333,20 +333,40 @@ def build_home_day(
     work_start   = plan.get("work_time_start",        "")     or ""
     work_end     = plan.get("work_time_end",          "")     or ""
 
-    cv_min  = plan.get("course_view_min", 0) or 90
-    cp_min  = plan.get("course_practice_min", 0) or 60
-    sys_min = plan.get("system_min", 0) or 60
+    # Per-day minute dicts (filled by new questionnaire flow)
+    cv_per_day  = plan.get("course_view_per_day",     {})
+    cp_per_day  = plan.get("course_practice_per_day", {})
+    sys_per_day = plan.get("system_per_day",          {})
 
     if day_index == 7:
         has_cv = has_cp = has_sys = False
+        cv_min = cp_min = sys_min = 0
     else:
         day_asgn = assignments.get(day_en, {})
-        has_cv  = (day_en in course_view_days)     if course_view_days     else day_asgn.get("course_view", False)
-        has_cp  = (day_en in course_practice_days) if course_practice_days else day_asgn.get("course_practice", False)
-        has_sys = (day_en in system_days)           if system_days          else day_asgn.get("system", False)
-        if not plan.get("course_view_min"):     has_cv  = False
-        if not plan.get("course_practice_min"): has_cp  = False
-        if not plan.get("system_min"):          has_sys = False
+
+        if cv_per_day:
+            has_cv = day_en in cv_per_day and cv_per_day[day_en] > 0
+            cv_min = cv_per_day.get(day_en, 0)
+        else:
+            has_cv = (day_en in course_view_days) if course_view_days else day_asgn.get("course_view", False)
+            cv_min = plan.get("course_view_min", 0) or 90
+            if not plan.get("course_view_min"): has_cv = False
+
+        if cp_per_day:
+            has_cp = day_en in cp_per_day and cp_per_day[day_en] > 0
+            cp_min = cp_per_day.get(day_en, 0)
+        else:
+            has_cp = (day_en in course_practice_days) if course_practice_days else day_asgn.get("course_practice", False)
+            cp_min = plan.get("course_practice_min", 0) or 60
+            if not plan.get("course_practice_min"): has_cp = False
+
+        if sys_per_day:
+            has_sys = day_en in sys_per_day and sys_per_day[day_en] > 0
+            sys_min = sys_per_day.get(day_en, 0)
+        else:
+            has_sys = (day_en in system_days) if system_days else day_asgn.get("system", False)
+            sys_min = plan.get("system_min", 0) or 60
+            if not plan.get("system_min"): has_sys = False
 
     _WORK_LABELS    = {"משמרת": "משמרת", "ספונטנית": "ספונטנית",
                        "עם-נסיעות": "עם נסיעות", "קצרה": "קצרה"}
