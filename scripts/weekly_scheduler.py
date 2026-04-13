@@ -559,8 +559,9 @@ def generate_schedule(dry_run: bool = False) -> None:
             "blocked_days":        [],
         }
     else:
-        # Plan JSON overrides basketball_days (in case they differ)
+        # Plan JSON overrides basketball_days and vr_count (in case Notion property is stale)
         basketball_days_raw = plan.get("basketball_days", basketball_days_raw)
+        vr_count            = plan.get("vr_count", vr_count)
 
     log.info("Week type: %s | Basketball: %s | VR: %d | Plan JSON: %s",
              week_type, basketball_days_raw, vr_count, bool(plan.get("course_view_min")))

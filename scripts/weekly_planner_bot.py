@@ -630,7 +630,8 @@ def _save_to_notion(plan: dict) -> None:
             notion.pages.update(
                 page_id=page_id,
                 properties={
-                    "Plan JSON": {"rich_text": [{"text": {"content": json.dumps(plan, ensure_ascii=False)[:2000]}}]},
+                    "Plan JSON":       {"rich_text": [{"text": {"content": json.dumps(plan, ensure_ascii=False)[:2000]}}]},
+                    "VR Events Count": {"number": plan.get("vr_count", 0)},
                 }
             )
             print(f"✅ Updated Plan JSON for {next_mon}")
