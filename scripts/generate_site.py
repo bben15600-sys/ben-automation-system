@@ -868,6 +868,30 @@ def generate_html(entries: list[dict], week_start: date) -> str:
     opacity: 0.5;
   }}
 
+  /* ── Calendar subscribe ── */
+  .cal-subscribe {{
+    text-align: center;
+    padding: 24px 16px 0;
+  }}
+  .cal-btn {{
+    display: inline-block;
+    background: linear-gradient(135deg, #7c3aed, #db2777);
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px 32px;
+    border-radius: 14px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 4px 20px #7c3aed44;
+  }}
+  .cal-btn:active {{ transform: scale(0.96); }}
+  .cal-hint {{
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 10px;
+  }}
+
   /* ── Footer ── */
   .footer {{
     text-align: center;
@@ -904,6 +928,13 @@ def generate_html(entries: list[dict], week_start: date) -> str:
 <div class="section-title">⚡ פירוט יומי</div>
 
 {day_cards}
+
+<div class="cal-subscribe">
+  <a class="cal-btn" href="webcal://bben15600-sys.github.io/ben-automation-system/calendar.ics">
+    📅 הוסף לגוגל קלנדר
+  </a>
+  <div class="cal-hint">לוחצים → מאשרים → כל הלוז מסתנכרן אוטומטית עם התראות</div>
+</div>
 
 <div class="footer">עודכן {generated}</div>
 
@@ -997,6 +1028,117 @@ loadGoals();
 </html>"""
 
 
+# ── ICS calendar generation ──────────────────────────────────────────────────
+
+def _ics_escape(text: str) -> str:
+    """Escape special characters for iCalendar text fields."""
+    return text.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
+
+
+def generate_ics(entries: list[dict], week_start: date) -> str:
+    """Generate an iCalendar (.ics) file from schedule entries.
+
+    Each activity line with a time becomes a VEVENT with a 15-minute
+    reminder (VALARM).  Sleep events are skipped.
+    """
+    lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Ben Schedule//Weekly Planner//HE",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        "X-WR-CALNAME:הלוז השבועי שלי",
+        "X-WR-TIMEZONE:Asia/Jerusalem",
+        "BEGIN:VTIMEZONE",
+        "TZID:Asia/Jerusalem",
+        "BEGIN:STANDARD",
+        "DTSTART:19701025T020000",
+        "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU",
+        "TZOFFSETFROM:+0300",
+        "TZOFFSETTO:+0200",
+        "TZNAME:IST",
+        "END:STANDARD",
+        "BEGIN:DAYLIGHT",
+        "DTSTART:19700329T020000",
+        "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1FR",
+        "TZOFFSETFROM:+0200",
+        "TZOFFSETTO:+0300",
+        "TZNAME:IDT",
+        "END:DAYLIGHT",
+        "END:VTIMEZONE",
+    ]
+
+    uid_n = 0
+    now_utc = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+
+    for entry in entries:
+        day_date = entry.get("day_date")
+        if not day_date:
+            continue
+
+        items = build_items(entry)
+        date_str = day_date.strftime("%Y%m%d")
+
+        for i, item in enumerate(items):
+            text = item["text"]
+
+            # Skip sleep / break items
+            if any(k in text for k in ["שינה", "הפסקה"]):
+                continue
+
+            time_field = item["time"]
+            if not time_field:
+                continue
+
+            # Try range format "HH:MM–HH:MM"
+            range_m = re.match(r'^(\d{1,2}):(\d{2})\s*[–\-]\s*(\d{1,2}):(\d{2})', time_field)
+            single_m = re.match(r'^(\d{1,2}):(\d{2})', time_field)
+
+            if range_m:
+                sh, sm = int(range_m.group(1)), int(range_m.group(2))
+                eh, em = int(range_m.group(3)), int(range_m.group(4))
+            elif single_m:
+                sh, sm = int(single_m.group(1)), int(single_m.group(2))
+                # End time = next item's start, or +1 hour
+                eh, em = sh + 1, sm
+                for j in range(i + 1, len(items)):
+                    nxt = items[j]["time"]
+                    nm = re.match(r'^(\d{1,2}):(\d{2})', nxt) if nxt else None
+                    if nm:
+                        nh, nmn = int(nm.group(1)), int(nm.group(2))
+                        # Only use if it's after start
+                        if nh * 60 + nmn > sh * 60 + sm:
+                            eh, em = nh, nmn
+                        break
+            else:
+                continue
+
+            # Cap end time
+            if eh > 23:
+                eh, em = 23, 59
+
+            uid_n += 1
+            summary = _ics_escape(text)
+
+            lines.extend([
+                "BEGIN:VEVENT",
+                f"UID:{week_start.isoformat()}-{uid_n}@ben-schedule",
+                f"DTSTAMP:{now_utc}",
+                f"DTSTART;TZID=Asia/Jerusalem:{date_str}T{sh:02d}{sm:02d}00",
+                f"DTEND;TZID=Asia/Jerusalem:{date_str}T{eh:02d}{em:02d}00",
+                f"SUMMARY:{summary}",
+                "BEGIN:VALARM",
+                "TRIGGER:-PT15M",
+                "ACTION:DISPLAY",
+                f"DESCRIPTION:{_ics_escape(text)}",
+                "END:VALARM",
+                "END:VEVENT",
+            ])
+
+    lines.append("END:VCALENDAR")
+    return "\r\n".join(lines)
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -1013,10 +1155,17 @@ def main():
 
     html = generate_html(entries, week_start)
 
-    out = pathlib.Path(__file__).parent.parent / "docs" / "index.html"
-    out.parent.mkdir(exist_ok=True)
-    out.write_text(html, encoding="utf-8")
-    print(f"✅ Generated {out}")
+    docs = pathlib.Path(__file__).parent.parent / "docs"
+    docs.mkdir(exist_ok=True)
+
+    out_html = docs / "index.html"
+    out_html.write_text(html, encoding="utf-8")
+    print(f"✅ Generated {out_html}")
+
+    ics = generate_ics(entries, week_start)
+    out_ics = docs / "calendar.ics"
+    out_ics.write_text(ics, encoding="utf-8")
+    print(f"✅ Generated {out_ics}")
 
 
 if __name__ == "__main__":
