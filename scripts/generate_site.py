@@ -359,6 +359,44 @@ def compute_stats(entries: list[dict]) -> dict:
     }
 
 
+def compute_goals(entries: list[dict]) -> list[dict]:
+    """Extract weekly goals from schedule entries for the goals widget."""
+    goals = []
+
+    basketball_days = sum(1 for e in entries if e["basketball"])
+    if basketball_days:
+        goals.append({"id": "basketball", "icon": "🏀", "label": "כדורסל", "target": basketball_days, "unit": "אימונים", "step": 1})
+
+    lihi_days = sum(1 for e in entries if e["lihi"])
+    if lihi_days:
+        goals.append({"id": "lihi", "icon": "❤️", "label": "ליהי", "target": lihi_days, "unit": "ימים", "step": 1})
+
+    # Parse course/system minutes from activity text
+    course_min = 0
+    system_min = 0
+    for e in entries:
+        ft = e["full_text"]
+        for m in re.finditer(r'קורס[^(]*\((\d+)\s*דק', ft):
+            course_min += int(m.group(1))
+        for m in re.finditer(r'מערכת[^(]*\((\d+)\s*דק', ft):
+            system_min += int(m.group(1))
+
+    if course_min:
+        goals.append({"id": "course", "icon": "🎬", "label": "קורס", "target": course_min, "unit": "דקות", "step": 30})
+    if system_min:
+        goals.append({"id": "system", "icon": "💻", "label": "מערכת", "target": system_min, "unit": "דקות", "step": 30})
+
+    vr_count = sum(1 for e in entries if e["vr"])
+    if vr_count:
+        goals.append({"id": "vr", "icon": "🥽", "label": "VR", "target": vr_count, "unit": "אירועים", "step": 1})
+
+    family_days = sum(1 for e in entries if e["family"])
+    if family_days:
+        goals.append({"id": "family", "icon": "👨‍👩‍👧", "label": "משפחה", "target": family_days, "unit": "ימים", "step": 1})
+
+    return goals
+
+
 # ── HTML rendering ────────────────────────────────────────────────────────────
 
 def render_stat_card(number, label: str, emoji: str, color: str) -> str:
@@ -368,6 +406,53 @@ def render_stat_card(number, label: str, emoji: str, color: str) -> str:
       <div class="stat-emoji">{emoji}</div>
       <div class="stat-label">{label}</div>
     </div>"""
+
+
+def render_goals_widget(goals: list[dict]) -> str:
+    if not goals:
+        return ""
+    cards = ""
+    for g in goals:
+        cards += f"""
+      <div class="goal-card" data-goal="{g['id']}" data-target="{g['target']}" data-step="{g['step']}" onclick="bumpGoal('{g['id']}',{g['target']},{g['step']})">
+        <div class="goal-icon">{g['icon']}</div>
+        <div class="goal-progress">
+          <span class="goal-current" id="goal-{g['id']}">0</span>
+          <span class="goal-sep">/</span>
+          <span class="goal-target">{g['target']}</span>
+        </div>
+        <div class="goal-label">{g['label']}</div>
+        <div class="goal-unit">{g['unit']}</div>
+        <div class="goal-bar-track"><div class="goal-bar-fill" id="goalbar-{g['id']}"></div></div>
+      </div>"""
+
+    return f"""
+  <div class="widget goals-widget">
+    <div class="widget-header">
+      <div class="widget-title">🎯 יעדים שבועיים</div>
+      <div class="widget-sub">לחץ על יעד כדי לעדכן</div>
+    </div>
+    <div class="goals-grid">{cards}
+    </div>
+  </div>"""
+
+
+def render_progress_widget(total_items: int) -> str:
+    if total_items == 0:
+        return ""
+    return f"""
+  <div class="widget progress-widget">
+    <div class="widget-header">
+      <div class="widget-title">📊 התקדמות שבועית</div>
+    </div>
+    <div class="progress-info">
+      <span class="progress-pct" id="prog-pct">0%</span>
+      <span class="progress-count" id="prog-count">0/{total_items}</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="prog-fill"></div>
+    </div>
+  </div>"""
 
 
 def render_progress_bar(label: str, icon: str, hours: int, max_h: int = 15) -> str:
@@ -380,14 +465,16 @@ def render_progress_bar(label: str, icon: str, hours: int, max_h: int = 15) -> s
     </div>"""
 
 
-def render_item(item: dict) -> str:
+def render_item(item: dict, item_id: str = "") -> str:
     cat      = item["category"]
     fg, bg   = CATEGORY_COLORS.get(cat, ("#4b5563", "#111827"))
     time_str = item["time"]
     time_html = f'<span class="item-time">{time_str}</span>' if time_str else ""
+    check_html = f'<input type="checkbox" class="item-check" data-item="{item_id}" onchange="updateProgress()">' if item_id else ""
     return f"""
       <div class="day-item">
         <div class="item-main">
+          {check_html}
           <span class="item-text">{item["text"]}</span>
           <span class="item-icon">{item["icon"]}</span>
           {time_html}
@@ -401,7 +488,7 @@ def render_day_card(e: dict, idx: int) -> str:
     main_icon  = day_main_icon(e)
     icon_bg    = day_icon_bg(e)
     items      = build_items(e)
-    items_html = "".join(render_item(item) for item in items)
+    items_html = "".join(render_item(item, f"d{idx}i{j}") for j, item in enumerate(items))
     card_id    = f"day-{idx}"
     date_str   = f" {e['date_label']}" if e.get("date_label") else ""
 
@@ -439,6 +526,11 @@ def generate_html(entries: list[dict], week_start: date) -> str:
 
     total_days = len(sorted_entries)
 
+    # Widgets: goals + progress
+    goals = compute_goals(sorted_entries)
+    total_items = sum(len(build_items(e)) for e in sorted_entries)
+    week_key = week_start.isoformat()
+
     stat_cards = "".join([
         render_stat_card(stats["basketball_days"], "אימוני כדורסל", "🏀", "#fb923c"),
         render_stat_card(stats["editing_h"],       "שעות עריכה",   "🎬", "#34d399"),
@@ -453,6 +545,8 @@ def generate_html(entries: list[dict], week_start: date) -> str:
     ])
 
     day_cards = "".join(render_day_card(e, i) for i, e in enumerate(sorted_entries))
+    goals_html    = render_goals_widget(goals)
+    progress_html = render_progress_widget(total_items)
 
     return f"""<!DOCTYPE html>
 <html dir="rtl" lang="he">
@@ -655,6 +749,125 @@ def generate_html(entries: list[dict], week_start: date) -> str:
     width: fit-content;
   }}
 
+  /* ── Widgets ── */
+  .widget {{
+    margin: 14px 16px 0;
+    background: #12122a;
+    border-radius: 18px;
+    padding: 18px 16px;
+    border: 1px solid #ffffff08;
+  }}
+  .widget-header {{ margin-bottom: 14px; }}
+  .widget-title {{
+    font-size: 14px;
+    font-weight: 700;
+    color: #e2e2e8;
+  }}
+  .widget-sub {{
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+  }}
+
+  /* ── Goals widget ── */
+  .goals-grid {{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }}
+  @media (max-width: 340px) {{
+    .goals-grid {{ grid-template-columns: repeat(2, 1fr); }}
+  }}
+  .goal-card {{
+    background: #0d0d1e;
+    border-radius: 14px;
+    padding: 14px 8px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, border-color 0.3s ease;
+    border: 1px solid #ffffff06;
+  }}
+  .goal-card:active {{ transform: scale(0.93); }}
+  .goal-card.done {{ border-color: #22c55e44; background: #0a1a0f; }}
+  .goal-icon {{ font-size: 24px; margin-bottom: 6px; }}
+  .goal-progress {{ font-size: 22px; font-weight: 900; color: #e2e2e8; }}
+  .goal-sep {{ color: #4b5563; margin: 0 1px; font-weight: 400; }}
+  .goal-target {{ color: #6b7280; font-weight: 400; }}
+  .goal-label {{ font-size: 11px; color: #9ca3af; margin-top: 4px; }}
+  .goal-unit {{ font-size: 10px; color: #4b5563; }}
+  .goal-bar-track {{
+    height: 4px;
+    background: #1f2937;
+    border-radius: 99px;
+    margin-top: 8px;
+    overflow: hidden;
+  }}
+  .goal-bar-fill {{
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #22c55e);
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.3s ease;
+  }}
+
+  /* ── Progress widget ── */
+  .progress-info {{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }}
+  .progress-pct {{ font-size: 28px; font-weight: 900; color: #c084fc; }}
+  .progress-count {{ font-size: 13px; color: #6b7280; direction: ltr; }}
+  .progress-track {{
+    height: 8px;
+    background: #1f2937;
+    border-radius: 99px;
+    overflow: hidden;
+  }}
+  .progress-fill {{
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #c084fc, #f472b6);
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }}
+
+  /* ── Checkboxes on items ── */
+  .item-check {{
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #374151;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.2s ease;
+  }}
+  .item-check:checked {{
+    background: #7c3aed;
+    border-color: #7c3aed;
+  }}
+  .item-check:checked::after {{
+    content: '\\2713';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }}
+  .day-item.checked .item-text {{
+    text-decoration: line-through;
+    opacity: 0.5;
+  }}
+
   /* ── Footer ── */
   .footer {{
     text-align: center;
@@ -684,6 +897,10 @@ def generate_html(entries: list[dict], week_start: date) -> str:
 {progress_bars}
 </div>
 
+{goals_html}
+
+{progress_html}
+
 <div class="section-title">⚡ פירוט יומי</div>
 
 {day_cards}
@@ -698,6 +915,82 @@ function toggleDay(id) {{
   body.classList.toggle('collapsed');
   arr.classList.toggle('open');
 }}
+
+/* ── Weekly progress checkboxes ── */
+var WK = '{week_key}';
+
+function updateProgress() {{
+  var checks = document.querySelectorAll('.item-check');
+  var done = 0, total = checks.length;
+  var state = {{}};
+  checks.forEach(function(c) {{
+    var id = c.getAttribute('data-item');
+    state[id] = c.checked;
+    if (c.checked) {{
+      done++;
+      c.closest('.day-item').classList.add('checked');
+    }} else {{
+      c.closest('.day-item').classList.remove('checked');
+    }}
+  }});
+  var pct = total ? Math.round(done / total * 100) : 0;
+  var pctEl = document.getElementById('prog-pct');
+  var cntEl = document.getElementById('prog-count');
+  var fillEl = document.getElementById('prog-fill');
+  if (pctEl) pctEl.textContent = pct + '%';
+  if (cntEl) cntEl.textContent = done + '/' + total;
+  if (fillEl) fillEl.style.width = pct + '%';
+  try {{ localStorage.setItem(WK + '_checks', JSON.stringify(state)); }} catch(e) {{}}
+}}
+
+function loadProgress() {{
+  try {{
+    var saved = JSON.parse(localStorage.getItem(WK + '_checks') || '{{}}');
+    Object.keys(saved).forEach(function(id) {{
+      var el = document.querySelector('[data-item="' + id + '"]');
+      if (el && saved[id]) el.checked = true;
+    }});
+    updateProgress();
+  }} catch(e) {{}}
+}}
+
+/* ── Goals counter ── */
+var goalState = {{}};
+
+function bumpGoal(id, target, step) {{
+  var cur = (goalState[id] || 0) + step;
+  if (cur > target) cur = 0;
+  goalState[id] = cur;
+  var el = document.getElementById('goal-' + id);
+  var bar = document.getElementById('goalbar-' + id);
+  var card = el ? el.closest('.goal-card') : null;
+  if (el) el.textContent = cur;
+  if (bar) bar.style.width = Math.min(100, cur / target * 100) + '%';
+  if (card) {{
+    if (cur >= target) card.classList.add('done');
+    else card.classList.remove('done');
+  }}
+  try {{ localStorage.setItem(WK + '_goals', JSON.stringify(goalState)); }} catch(e) {{}}
+}}
+
+function loadGoals() {{
+  try {{
+    goalState = JSON.parse(localStorage.getItem(WK + '_goals') || '{{}}');
+    Object.keys(goalState).forEach(function(id) {{
+      var el = document.getElementById('goal-' + id);
+      var bar = document.getElementById('goalbar-' + id);
+      var card = el ? el.closest('.goal-card') : null;
+      var target = card ? parseInt(card.getAttribute('data-target')) : 1;
+      if (el) el.textContent = goalState[id];
+      if (bar) bar.style.width = Math.min(100, goalState[id] / target * 100) + '%';
+      if (card && goalState[id] >= target) card.classList.add('done');
+    }});
+  }} catch(e) {{}}
+}}
+
+/* ── Init ── */
+loadProgress();
+loadGoals();
 </script>
 
 </body>
