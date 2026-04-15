@@ -26,6 +26,7 @@ Secrets go in environment variables — never committed to the repo (see `.gitig
 
 ## Notion Databases
 
+### Existing
 | Database | Collection ID |
 |---|---|
 | Rotation Schedule | `ac656f74-60b6-41a3-adc2-49e6656c3845` |
@@ -34,6 +35,15 @@ Secrets go in environment variables — never committed to the repo (see `.gitig
 | Video Projects | `36f48996-4d93-4080-b805-5b59f8f51e0b` |
 | Investments | `30c5ed27-8b02-439a-a510-de4601e22a30` |
 | Daily Brief | `bfcfbfe8-e343-43d2-85a6-f12668150157` |
+
+### New (need to create in Notion and fill in IDs)
+| Database | Placeholder ID | Agent |
+|---|---|---|
+| Relationships | `RELATIONSHIPS_DB_ID` | relationship-tracker |
+| Freelance Projects | `FREELANCE_DB_ID` | freelance-manager, invoice-generator |
+| Recipes | `RECIPES_DB_ID` | meal-planner |
+| Meal Plans | `MEAL_PLANS_DB_ID` | meal-planner |
+| Invoices | `INVOICES_DB_ID` | invoice-generator |
 
 ## Agent Structure
 
