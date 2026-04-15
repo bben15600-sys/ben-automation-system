@@ -318,6 +318,30 @@
     opacity: 0.5;
   }
 
+  /* ── Calendar subscribe ── */
+  .cal-subscribe {
+    text-align: center;
+    padding: 24px 16px 0;
+  }
+  .cal-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #7c3aed, #db2777);
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px 32px;
+    border-radius: 14px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 4px 20px #7c3aed44;
+  }
+  .cal-btn:active { transform: scale(0.96); }
+  .cal-hint {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 10px;
+  }
+
   /* ── Footer ── */
   .footer {
     text-align: center;
@@ -1065,7 +1089,14 @@
     </div>
   </div>
 
-<div class="footer">עודכן 15/04 21:46</div>
+<div class="cal-subscribe">
+  <a class="cal-btn" href="webcal://bben15600-sys.github.io/ben-automation-system/calendar.ics">
+    📅 הוסף לגוגל קלנדר
+  </a>
+  <div class="cal-hint">לוחצים → מאשרים → כל הלוז מסתנכרן אוטומטית עם התראות</div>
+</div>
+
+<div class="footer">עודכן 16/04 00:49</div>
 
 <script>
 function toggleDay(id) {
