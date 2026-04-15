@@ -199,6 +199,125 @@
     width: fit-content;
   }
 
+  /* ── Widgets ── */
+  .widget {
+    margin: 14px 16px 0;
+    background: #12122a;
+    border-radius: 18px;
+    padding: 18px 16px;
+    border: 1px solid #ffffff08;
+  }
+  .widget-header { margin-bottom: 14px; }
+  .widget-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #e2e2e8;
+  }
+  .widget-sub {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+
+  /* ── Goals widget ── */
+  .goals-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 340px) {
+    .goals-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .goal-card {
+    background: #0d0d1e;
+    border-radius: 14px;
+    padding: 14px 8px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, border-color 0.3s ease;
+    border: 1px solid #ffffff06;
+  }
+  .goal-card:active { transform: scale(0.93); }
+  .goal-card.done { border-color: #22c55e44; background: #0a1a0f; }
+  .goal-icon { font-size: 24px; margin-bottom: 6px; }
+  .goal-progress { font-size: 22px; font-weight: 900; color: #e2e2e8; }
+  .goal-sep { color: #4b5563; margin: 0 1px; font-weight: 400; }
+  .goal-target { color: #6b7280; font-weight: 400; }
+  .goal-label { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+  .goal-unit { font-size: 10px; color: #4b5563; }
+  .goal-bar-track {
+    height: 4px;
+    background: #1f2937;
+    border-radius: 99px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .goal-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #22c55e);
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  /* ── Progress widget ── */
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .progress-pct { font-size: 28px; font-weight: 900; color: #c084fc; }
+  .progress-count { font-size: 13px; color: #6b7280; direction: ltr; }
+  .progress-track {
+    height: 8px;
+    background: #1f2937;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #c084fc, #f472b6);
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  /* ── Checkboxes on items ── */
+  .item-check {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #374151;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  .item-check:checked {
+    background: #7c3aed;
+    border-color: #7c3aed;
+  }
+  .item-check:checked::after {
+    content: '\2713';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .day-item.checked .item-text {
+    text-decoration: line-through;
+    opacity: 0.5;
+  }
+
   /* ── Footer ── */
   .footer {
     text-align: center;
@@ -263,6 +382,96 @@
     </div>
 </div>
 
+
+  <div class="widget goals-widget">
+    <div class="widget-header">
+      <div class="widget-title">🎯 יעדים שבועיים</div>
+      <div class="widget-sub">לחץ על יעד כדי לעדכן</div>
+    </div>
+    <div class="goals-grid">
+      <div class="goal-card" data-goal="basketball" data-target="3" data-step="1" onclick="bumpGoal('basketball',3,1)">
+        <div class="goal-icon">🏀</div>
+        <div class="goal-progress">
+          <span class="goal-current" id="goal-basketball">0</span>
+          <span class="goal-sep">/</span>
+          <span class="goal-target">3</span>
+        </div>
+        <div class="goal-label">כדורסל</div>
+        <div class="goal-unit">אימונים</div>
+        <div class="goal-bar-track"><div class="goal-bar-fill" id="goalbar-basketball"></div></div>
+      </div>
+      <div class="goal-card" data-goal="lihi" data-target="3" data-step="1" onclick="bumpGoal('lihi',3,1)">
+        <div class="goal-icon">❤️</div>
+        <div class="goal-progress">
+          <span class="goal-current" id="goal-lihi">0</span>
+          <span class="goal-sep">/</span>
+          <span class="goal-target">3</span>
+        </div>
+        <div class="goal-label">ליהי</div>
+        <div class="goal-unit">ימים</div>
+        <div class="goal-bar-track"><div class="goal-bar-fill" id="goalbar-lihi"></div></div>
+      </div>
+      <div class="goal-card" data-goal="course" data-target="1080" data-step="30" onclick="bumpGoal('course',1080,30)">
+        <div class="goal-icon">🎬</div>
+        <div class="goal-progress">
+          <span class="goal-current" id="goal-course">0</span>
+          <span class="goal-sep">/</span>
+          <span class="goal-target">1080</span>
+        </div>
+        <div class="goal-label">קורס</div>
+        <div class="goal-unit">דקות</div>
+        <div class="goal-bar-track"><div class="goal-bar-fill" id="goalbar-course"></div></div>
+      </div>
+      <div class="goal-card" data-goal="system" data-target="480" data-step="30" onclick="bumpGoal('system',480,30)">
+        <div class="goal-icon">💻</div>
+        <div class="goal-progress">
+          <span class="goal-current" id="goal-system">0</span>
+          <span class="goal-sep">/</span>
+          <span class="goal-target">480</span>
+        </div>
+        <div class="goal-label">מערכת</div>
+        <div class="goal-unit">דקות</div>
+        <div class="goal-bar-track"><div class="goal-bar-fill" id="goalbar-system"></div></div>
+      </div>
+      <div class="goal-card" data-goal="vr" data-target="2" data-step="1" onclick="bumpGoal('vr',2,1)">
+        <div class="goal-icon">🥽</div>
+        <div class="goal-progress">
+          <span class="goal-current" id="goal-vr">0</span>
+          <span class="goal-sep">/</span>
+          <span class="goal-target">2</span>
+        </div>
+        <div class="goal-label">VR</div>
+        <div class="goal-unit">אירועים</div>
+        <div class="goal-bar-track"><div class="goal-bar-fill" id="goalbar-vr"></div></div>
+      </div>
+      <div class="goal-card" data-goal="family" data-target="5" data-step="1" onclick="bumpGoal('family',5,1)">
+        <div class="goal-icon">👨‍👩‍👧</div>
+        <div class="goal-progress">
+          <span class="goal-current" id="goal-family">0</span>
+          <span class="goal-sep">/</span>
+          <span class="goal-target">5</span>
+        </div>
+        <div class="goal-label">משפחה</div>
+        <div class="goal-unit">ימים</div>
+        <div class="goal-bar-track"><div class="goal-bar-fill" id="goalbar-family"></div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="widget progress-widget">
+    <div class="widget-header">
+      <div class="widget-title">📊 התקדמות שבועית</div>
+    </div>
+    <div class="progress-info">
+      <span class="progress-pct" id="prog-pct">0%</span>
+      <span class="progress-count" id="prog-count">0/53</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="prog-fill"></div>
+    </div>
+  </div>
+
 <div class="section-title">⚡ פירוט יומי</div>
 
 
@@ -280,6 +489,7 @@
 
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d0i0" onchange="updateProgress()">
           <span class="item-text">🏠 הגעה הביתה</span>
           <span class="item-icon">🚗</span>
           <span class="item-time">11:00</span>
@@ -288,6 +498,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d0i1" onchange="updateProgress()">
           <span class="item-text">🍽 ארוחת צהריים</span>
           <span class="item-icon">🍽</span>
           <span class="item-time">12:30</span>
@@ -296,6 +507,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d0i2" onchange="updateProgress()">
           <span class="item-text">🎬 עריכה / פרויקטים</span>
           <span class="item-icon">🎬</span>
           <span class="item-time">14:00</span>
@@ -304,6 +516,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d0i3" onchange="updateProgress()">
           <span class="item-text">💛 ליהי</span>
           <span class="item-icon">❤️</span>
           <span class="item-time">19:00</span>
@@ -312,6 +525,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d0i4" onchange="updateProgress()">
           <span class="item-text">😴 שינה</span>
           <span class="item-icon">😴</span>
           <span class="item-time">23:00</span>
@@ -334,6 +548,7 @@
 
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d1i0" onchange="updateProgress()">
           <span class="item-text">☀️ קימה + ארוחת בוקר</span>
           <span class="item-icon">🍽</span>
           <span class="item-time">10:00</span>
@@ -342,6 +557,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d1i1" onchange="updateProgress()">
           <span class="item-text">🎬 קורס צפייה (150 דק׳)</span>
           <span class="item-icon">🎬</span>
           <span class="item-time">11:00</span>
@@ -350,6 +566,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d1i2" onchange="updateProgress()">
           <span class="item-text">☕ הפסקה</span>
           <span class="item-icon">☕</span>
           <span class="item-time">13:30</span>
@@ -358,6 +575,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d1i3" onchange="updateProgress()">
           <span class="item-text">💻 מערכת (120 דק׳)</span>
           <span class="item-icon">💻</span>
           <span class="item-time">13:30</span>
@@ -366,6 +584,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d1i4" onchange="updateProgress()">
           <span class="item-text">🎬 תרגול קורס (120 דק׳)</span>
           <span class="item-icon">🎬</span>
           <span class="item-time">14:00</span>
@@ -374,6 +593,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d1i5" onchange="updateProgress()">
           <span class="item-text">🎾 טניס</span>
           <span class="item-icon">🎾</span>
           <span class="item-time">17:00</span>
@@ -382,6 +602,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d1i6" onchange="updateProgress()">
           <span class="item-text">🏀 כדורסל</span>
           <span class="item-icon">🏀</span>
           <span class="item-time">19:30</span>
@@ -390,6 +611,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d1i7" onchange="updateProgress()">
           <span class="item-text">👨‍👦 מפגש אבא</span>
           <span class="item-icon">🧑</span>
           <span class="item-time">23:00</span>
@@ -398,6 +620,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d1i8" onchange="updateProgress()">
           <span class="item-text">😴 שינה</span>
           <span class="item-icon">😴</span>
           <span class="item-time">23:00</span>
@@ -420,6 +643,7 @@
 
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d2i0" onchange="updateProgress()">
           <span class="item-text">☀️ קימה + ארוחת בוקר</span>
           <span class="item-icon">🍽</span>
           <span class="item-time">10:00</span>
@@ -428,6 +652,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d2i1" onchange="updateProgress()">
           <span class="item-text">👬 חברים — ☕ קפה</span>
           <span class="item-icon">👥</span>
           <span class="item-time">10:00</span>
@@ -436,6 +661,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d2i2" onchange="updateProgress()">
           <span class="item-text">🎬 קורס צפייה (150 דק׳)</span>
           <span class="item-icon">🎬</span>
           <span class="item-time">11:00</span>
@@ -444,6 +670,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d2i3" onchange="updateProgress()">
           <span class="item-text">☕ הפסקה</span>
           <span class="item-icon">☕</span>
           <span class="item-time">13:30</span>
@@ -452,6 +679,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d2i4" onchange="updateProgress()">
           <span class="item-text">💻 מערכת (120 דק׳)</span>
           <span class="item-icon">💻</span>
           <span class="item-time">13:30</span>
@@ -460,6 +688,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d2i5" onchange="updateProgress()">
           <span class="item-text">🎬 תרגול קורס (120 דק׳)</span>
           <span class="item-icon">🎬</span>
           <span class="item-time">14:00</span>
@@ -468,6 +697,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d2i6" onchange="updateProgress()">
           <span class="item-text">🎾 טניס</span>
           <span class="item-icon">🎾</span>
           <span class="item-time">17:00</span>
@@ -476,6 +706,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d2i7" onchange="updateProgress()">
           <span class="item-text">🏀 כדורסל</span>
           <span class="item-icon">🏀</span>
           <span class="item-time">19:30</span>
@@ -484,6 +715,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d2i8" onchange="updateProgress()">
           <span class="item-text">👨‍👦 מפגש אבא</span>
           <span class="item-icon">🧑</span>
           <span class="item-time">23:00</span>
@@ -492,6 +724,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d2i9" onchange="updateProgress()">
           <span class="item-text">😴 שינה</span>
           <span class="item-icon">😴</span>
           <span class="item-time">23:00</span>
@@ -514,6 +747,7 @@
 
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d3i0" onchange="updateProgress()">
           <span class="item-text">☀️ קימה + ארוחת בוקר</span>
           <span class="item-icon">🍽</span>
           <span class="item-time">07:00</span>
@@ -522,6 +756,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d3i1" onchange="updateProgress()">
           <span class="item-text">🥽 אירוע VR — Enjoy VR</span>
           <span class="item-icon">🥽</span>
           <span class="item-time">08:00</span>
@@ -530,6 +765,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d3i2" onchange="updateProgress()">
           <span class="item-text">🍽 ארוחת צהריים</span>
           <span class="item-icon">🍽</span>
           <span class="item-time">12:30</span>
@@ -538,6 +774,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d3i3" onchange="updateProgress()">
           <span class="item-text">🌙 זמן חופשי</span>
           <span class="item-icon">✨</span>
           <span class="item-time">18:00</span>
@@ -546,6 +783,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d3i4" onchange="updateProgress()">
           <span class="item-text">😴 שינה</span>
           <span class="item-icon">😴</span>
           <span class="item-time">23:00</span>
@@ -568,6 +806,7 @@
 
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d4i0" onchange="updateProgress()">
           <span class="item-text">☀️ קימה + ארוחת בוקר</span>
           <span class="item-icon">🍽</span>
           <span class="item-time">10:00</span>
@@ -576,6 +815,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d4i1" onchange="updateProgress()">
           <span class="item-text">🎬 קורס צפייה (150 דק׳)</span>
           <span class="item-icon">🎬</span>
           <span class="item-time">11:00</span>
@@ -584,6 +824,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d4i2" onchange="updateProgress()">
           <span class="item-text">☕ הפסקה</span>
           <span class="item-icon">☕</span>
           <span class="item-time">13:30</span>
@@ -592,6 +833,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d4i3" onchange="updateProgress()">
           <span class="item-text">💻 מערכת (120 דק׳)</span>
           <span class="item-icon">💻</span>
           <span class="item-time">13:30</span>
@@ -600,6 +842,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d4i4" onchange="updateProgress()">
           <span class="item-text">🎬 תרגול קורס (120 דק׳)</span>
           <span class="item-icon">🎬</span>
           <span class="item-time">14:00</span>
@@ -608,6 +851,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d4i5" onchange="updateProgress()">
           <span class="item-text">💛 ליהי</span>
           <span class="item-icon">❤️</span>
           <span class="item-time">19:00</span>
@@ -616,6 +860,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d4i6" onchange="updateProgress()">
           <span class="item-text">😴 שינה</span>
           <span class="item-icon">😴</span>
           <span class="item-time">23:00</span>
@@ -638,6 +883,7 @@
 
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d5i0" onchange="updateProgress()">
           <span class="item-text">😴 שינה / מנוחה מלאה</span>
           <span class="item-icon">😴</span>
           <span class="item-time">10:00</span>
@@ -646,6 +892,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d5i1" onchange="updateProgress()">
           <span class="item-text">🍽 ארוחת צהריים</span>
           <span class="item-icon">🍽</span>
           <span class="item-time">12:30</span>
@@ -654,6 +901,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d5i2" onchange="updateProgress()">
           <span class="item-text">🎾 טניס</span>
           <span class="item-icon">🎾</span>
           <span class="item-time">17:00</span>
@@ -662,6 +910,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d5i3" onchange="updateProgress()">
           <span class="item-text">🌙 זמן חופשי</span>
           <span class="item-icon">✨</span>
           <span class="item-time">17:30</span>
@@ -670,6 +919,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d5i4" onchange="updateProgress()">
           <span class="item-text">🏀 כדורסל</span>
           <span class="item-icon">🏀</span>
           <span class="item-time">19:30</span>
@@ -678,6 +928,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d5i5" onchange="updateProgress()">
           <span class="item-text">👨‍👦 מפגש אבא</span>
           <span class="item-icon">🧑</span>
           <span class="item-time">23:00</span>
@@ -700,6 +951,7 @@
 
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d6i0" onchange="updateProgress()">
           <span class="item-text">☀️ קימה + ארוחת בוקר</span>
           <span class="item-icon">🍽</span>
           <span class="item-time">10:00</span>
@@ -708,6 +960,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d6i1" onchange="updateProgress()">
           <span class="item-text">🎬 קורס צפייה (150 דק׳)</span>
           <span class="item-icon">🎬</span>
           <span class="item-time">11:00</span>
@@ -716,6 +969,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d6i2" onchange="updateProgress()">
           <span class="item-text">👵 ביקור סבא וסבתא</span>
           <span class="item-icon">👴</span>
           <span class="item-time">11:00</span>
@@ -724,6 +978,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d6i3" onchange="updateProgress()">
           <span class="item-text">☕ הפסקה</span>
           <span class="item-icon">☕</span>
           <span class="item-time">13:30</span>
@@ -732,6 +987,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d6i4" onchange="updateProgress()">
           <span class="item-text">💻 מערכת (120 דק׳)</span>
           <span class="item-icon">💻</span>
           <span class="item-time">13:30</span>
@@ -740,6 +996,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d6i5" onchange="updateProgress()">
           <span class="item-text">🎬 תרגול קורס (120 דק׳)</span>
           <span class="item-icon">🎬</span>
           <span class="item-time">14:00</span>
@@ -748,6 +1005,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d6i6" onchange="updateProgress()">
           <span class="item-text">💛 ליהי</span>
           <span class="item-icon">❤️</span>
           <span class="item-time">19:00</span>
@@ -756,6 +1014,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d6i7" onchange="updateProgress()">
           <span class="item-text">😴 שינה</span>
           <span class="item-icon">😴</span>
           <span class="item-time">23:00</span>
@@ -778,6 +1037,7 @@
 
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d7i0" onchange="updateProgress()">
           <span class="item-text">✈️ כניסה לבסיס — התארגנות</span>
           <span class="item-icon">✈️</span>
           <span class="item-time">11:00</span>
@@ -786,6 +1046,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d7i1" onchange="updateProgress()">
           <span class="item-text">✈️ בסיס — אחר הצהריים</span>
           <span class="item-icon">✈️</span>
           <span class="item-time">12:00</span>
@@ -794,6 +1055,7 @@
       </div>
       <div class="day-item">
         <div class="item-main">
+          <input type="checkbox" class="item-check" data-item="d7i2" onchange="updateProgress()">
           <span class="item-text">🪖 בסיס — ערב</span>
           <span class="item-icon">✈️</span>
           <span class="item-time">20:00</span>
@@ -803,7 +1065,7 @@
     </div>
   </div>
 
-<div class="footer">עודכן 13/04 12:45</div>
+<div class="footer">עודכן 15/04 17:37</div>
 
 <script>
 function toggleDay(id) {
@@ -813,6 +1075,82 @@ function toggleDay(id) {
   body.classList.toggle('collapsed');
   arr.classList.toggle('open');
 }
+
+/* ── Weekly progress checkboxes ── */
+var WK = '2026-04-13';
+
+function updateProgress() {
+  var checks = document.querySelectorAll('.item-check');
+  var done = 0, total = checks.length;
+  var state = {};
+  checks.forEach(function(c) {
+    var id = c.getAttribute('data-item');
+    state[id] = c.checked;
+    if (c.checked) {
+      done++;
+      c.closest('.day-item').classList.add('checked');
+    } else {
+      c.closest('.day-item').classList.remove('checked');
+    }
+  });
+  var pct = total ? Math.round(done / total * 100) : 0;
+  var pctEl = document.getElementById('prog-pct');
+  var cntEl = document.getElementById('prog-count');
+  var fillEl = document.getElementById('prog-fill');
+  if (pctEl) pctEl.textContent = pct + '%';
+  if (cntEl) cntEl.textContent = done + '/' + total;
+  if (fillEl) fillEl.style.width = pct + '%';
+  try { localStorage.setItem(WK + '_checks', JSON.stringify(state)); } catch(e) {}
+}
+
+function loadProgress() {
+  try {
+    var saved = JSON.parse(localStorage.getItem(WK + '_checks') || '{}');
+    Object.keys(saved).forEach(function(id) {
+      var el = document.querySelector('[data-item="' + id + '"]');
+      if (el && saved[id]) el.checked = true;
+    });
+    updateProgress();
+  } catch(e) {}
+}
+
+/* ── Goals counter ── */
+var goalState = {};
+
+function bumpGoal(id, target, step) {
+  var cur = (goalState[id] || 0) + step;
+  if (cur > target) cur = 0;
+  goalState[id] = cur;
+  var el = document.getElementById('goal-' + id);
+  var bar = document.getElementById('goalbar-' + id);
+  var card = el ? el.closest('.goal-card') : null;
+  if (el) el.textContent = cur;
+  if (bar) bar.style.width = Math.min(100, cur / target * 100) + '%';
+  if (card) {
+    if (cur >= target) card.classList.add('done');
+    else card.classList.remove('done');
+  }
+  try { localStorage.setItem(WK + '_goals', JSON.stringify(goalState)); } catch(e) {}
+}
+
+function loadGoals() {
+  try {
+    goalState = JSON.parse(localStorage.getItem(WK + '_goals') || '{}');
+    Object.keys(goalState).forEach(function(id) {
+      var el = document.getElementById('goal-' + id);
+      var bar = document.getElementById('goalbar-' + id);
+      var card = el ? el.closest('.goal-card') : null;
+      var target = card ? parseInt(card.getAttribute('data-target')) : 1;
+      if (el) el.textContent = goalState[id];
+      if (bar) bar.style.width = Math.min(100, goalState[id] / target * 100) + '%';
+      if (card && goalState[id] >= target) card.classList.add('done');
+    });
+  } catch(e) {}
+}
+
+/* ── Init ── */
+loadProgress();
+loadGoals();
 </script>
 
 </body>
