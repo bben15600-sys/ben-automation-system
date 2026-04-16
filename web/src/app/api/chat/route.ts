@@ -11,10 +11,7 @@ const SYSTEM_PROMPT = `אתה העוזר האישי של בן. שמך oslife.
 
 const FALLBACK_MODELS: Record<Tier, string[]> = {
   free: [
-    "google/gemini-2.0-flash-exp:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "qwen/qwen-2.5-72b-instruct:free",
-    "deepseek/deepseek-v3-0324:free",
+    "openrouter/free",
   ],
   cheap: [
     "anthropic/claude-3.5-haiku",

@@ -8,10 +8,7 @@ export interface RouteResult {
 
 const MODELS: Record<Tier, RouteResult[]> = {
   free: [
-    { model: "google/gemini-2.0-flash-exp:free", tier: "free", label: "Gemini Flash" },
-    { model: "meta-llama/llama-3.3-70b-instruct:free", tier: "free", label: "Llama 3.3" },
-    { model: "qwen/qwen-2.5-72b-instruct:free", tier: "free", label: "Qwen 2.5" },
-    { model: "deepseek/deepseek-v3-0324:free", tier: "free", label: "DeepSeek V3" },
+    { model: "openrouter/free", tier: "free", label: "Auto Free" },
   ],
   cheap: [
     { model: "anthropic/claude-3.5-haiku", tier: "cheap", label: "Claude Haiku" },
