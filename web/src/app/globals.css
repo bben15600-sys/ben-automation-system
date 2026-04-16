@@ -1,25 +1,35 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0a0a12;
-  --bg-card: #12122a;
-  --bg-hover: #1a1a3a;
-  --border: #ffffff08;
-  --text-primary: #e2e2e8;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --accent-purple: #7c3aed;
-  --accent-pink: #db2777;
-  --accent-green: #22c55e;
-  --accent-orange: #fb923c;
-  --accent-blue: #60a5fa;
+  --bg-primary: #050510;
+  --bg-secondary: #0c0c1d;
+  --bg-card: #111127;
+  --bg-card-hover: #16163a;
+  --bg-elevated: #1a1a42;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-active: rgba(255, 255, 255, 0.12);
+  --text-primary: #f0f0f5;
+  --text-secondary: #a0a0b8;
+  --text-muted: #5c5c78;
+  --accent-purple: #8b5cf6;
+  --accent-pink: #ec4899;
+  --accent-green: #34d399;
+  --accent-orange: #f97316;
+  --accent-blue: #38bdf8;
+  --accent-red: #f87171;
+  --accent-yellow: #fbbf24;
+  --glow-purple: rgba(139, 92, 246, 0.15);
+  --glow-blue: rgba(56, 189, 248, 0.1);
 }
 
 @theme inline {
   --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
   --color-bg-card: var(--bg-card);
-  --color-bg-hover: var(--bg-hover);
+  --color-bg-card-hover: var(--bg-card-hover);
+  --color-bg-elevated: var(--bg-elevated);
   --color-border-subtle: var(--border);
+  --color-border-active: var(--border-active);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
@@ -28,6 +38,10 @@
   --color-accent-green: var(--accent-green);
   --color-accent-orange: var(--accent-orange);
   --color-accent-blue: var(--accent-blue);
+  --color-accent-red: var(--accent-red);
+  --color-accent-yellow: var(--accent-yellow);
+  --color-glow-purple: var(--glow-purple);
+  --color-glow-blue: var(--glow-blue);
   --font-sans: var(--font-heebo);
 }
 
@@ -36,12 +50,75 @@
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-heebo), Arial, sans-serif;
+  font-family: var(--font-heebo), -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #374151; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+.glass {
+  background: rgba(17, 17, 39, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+}
+
+.glass-strong {
+  background: rgba(17, 17, 39, 0.9);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--border);
+}
+
+.glow-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), transparent 50%, rgba(56, 189, 248, 0.1));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.03) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
