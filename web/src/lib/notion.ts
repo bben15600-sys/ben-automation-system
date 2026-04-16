@@ -2,12 +2,12 @@ const NOTION_TOKEN = process.env.NOTION_API_TOKEN || "";
 const NOTION_API = "https://api.notion.com/v1";
 
 const DB = {
-  budget:      "344bb07d-d7b9-81ab-99c9-d7dc34c0b5f5",
-  schedule:    "344bb07d-d7b9-8127-9971-e4bd6f0c5815",
-  investments: "344bb07d-d7b9-818a-8248-fe3c22d5ecf8",
-  vr:          "344bb07d-d7b9-8198-9b3c-e52735071657",
-  videos:      "344bb07d-d7b9-810d-a47e-e15420ddda40",
-  goals:       "344bb07d-d7b9-81e2-883e-e9e9eb528682",
+  budget:      "344bb07d-d7b9-814d-8340-ec900e1a5637",
+  schedule:    "344bb07d-d7b9-8147-bc66-faf98025db8d",
+  investments: "344bb07d-d7b9-810e-ab8d-c95436081d84",
+  vr:          "344bb07d-d7b9-810c-b59d-cfb0b15b0780",
+  videos:      "344bb07d-d7b9-8157-8804-d4288b598a2e",
+  goals:       "344bb07d-d7b9-81c4-8c96-f8e9ec774c74",
 };
 
 export interface DashboardData {
