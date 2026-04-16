@@ -7,22 +7,21 @@ const HEADERS = {
   "Content-Type": "application/json",
 };
 
-async function createPage(title: string) {
-  const res = await fetch(`${NOTION_API}/pages`, {
+async function searchPages(): Promise<Array<{ id: string; title: string }>> {
+  const res = await fetch(`${NOTION_API}/search`, {
     method: "POST",
     headers: HEADERS,
-    body: JSON.stringify({
-      parent: { type: "workspace", workspace: true },
-      properties: { title: [{ text: { content: title } }] },
-      icon: { type: "emoji", emoji: "🟣" },
-    }),
+    body: JSON.stringify({ filter: { property: "object", value: "page" }, page_size: 20 }),
   });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Failed to create page: ${res.status} ${err}`);
-  }
+  if (!res.ok) return [];
   const data = await res.json();
-  return data.id;
+  return (data.results || []).map((p: Record<string, unknown>) => {
+    const props = p.properties as Record<string, Record<string, unknown>> | undefined;
+    const titleProp = props?.title || props?.Name;
+    const titleArr = titleProp?.title as Array<{ plain_text: string }> | undefined;
+    const title = titleArr?.[0]?.plain_text || "ללא שם";
+    return { id: p.id as string, title };
+  });
 }
 
 async function createDatabase(parentId: string, title: string, emoji: string, properties: Record<string, object>) {
@@ -38,22 +37,35 @@ async function createDatabase(parentId: string, title: string, emoji: string, pr
   });
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Failed to create DB "${title}": ${res.status} ${err}`);
+    throw new Error(`Failed to create "${title}": ${res.status} ${err}`);
   }
   const data = await res.json();
   return data.id;
 }
 
-export async function POST() {
+export async function GET() {
+  if (!NOTION_TOKEN) {
+    return Response.json({ error: "NOTION_API_TOKEN not set" }, { status: 500 });
+  }
+  const pages = await searchPages();
+  return Response.json({ pages });
+}
+
+export async function POST(req: Request) {
   if (!NOTION_TOKEN) {
     return Response.json({ error: "NOTION_API_TOKEN not set" }, { status: 500 });
   }
 
-  try {
-    const pageId = await createPage("oslife Dashboard");
+  const body = await req.json();
+  const parentId: string = body.parentId;
 
+  if (!parentId) {
+    return Response.json({ error: "parentId is required" }, { status: 400 });
+  }
+
+  try {
     const [budget, schedule, investments, vr, videos, goals] = await Promise.all([
-      createDatabase(pageId, "תקציב", "💰", {
+      createDatabase(parentId, "תקציב", "💰", {
         Name:     { title: {} },
         Amount:   { number: { format: "number" } },
         Category: { select: { options: [
@@ -64,10 +76,10 @@ export async function POST() {
           { name: "קניות", color: "purple" },
           { name: "אחר", color: "gray" },
         ] } },
-        Date:     { date: {} },
+        Date: { date: {} },
       }),
 
-      createDatabase(pageId, "לוז יומי", "📅", {
+      createDatabase(parentId, "לוז יומי", "📅", {
         Name:     { title: {} },
         Date:     { date: {} },
         Category: { select: { options: [
@@ -77,10 +89,10 @@ export async function POST() {
           { name: "חברתי", color: "pink" },
           { name: "למידה", color: "purple" },
         ] } },
-        Done:     { checkbox: {} },
+        Done: { checkbox: {} },
       }),
 
-      createDatabase(pageId, "השקעות", "📈", {
+      createDatabase(parentId, "השקעות", "📈", {
         Name:   { title: {} },
         Value:  { number: { format: "number" } },
         Change: { number: { format: "percent" } },
@@ -90,10 +102,10 @@ export async function POST() {
           { name: "חיסכון", color: "green" },
           { name: "אחר", color: "gray" },
         ] } },
-        Date:   { date: {} },
+        Date: { date: {} },
       }),
 
-      createDatabase(pageId, "אירועי VR", "🥽", {
+      createDatabase(parentId, "אירועי VR", "🥽", {
         Name:     { title: {} },
         Date:     { date: {} },
         Location: { rich_text: {} },
@@ -104,7 +116,7 @@ export async function POST() {
         ] } },
       }),
 
-      createDatabase(pageId, "פרויקטי וידאו", "🎬", {
+      createDatabase(parentId, "פרויקטי וידאו", "🎬", {
         Name:     { title: {} },
         Status:   { select: { options: [
           { name: "רעיון", color: "gray" },
@@ -120,7 +132,7 @@ export async function POST() {
         ] } },
       }),
 
-      createDatabase(pageId, "יעדים שבועיים", "🎯", {
+      createDatabase(parentId, "יעדים שבועיים", "🎯", {
         Name:   { title: {} },
         Done:   { number: { format: "number" } },
         Target: { number: { format: "number" } },
@@ -134,13 +146,9 @@ export async function POST() {
       }),
     ]);
 
-    const ids = { budget, schedule, investments, vr, videos, goals };
-
     return Response.json({
       success: true,
-      message: "All databases created! Update your code with these IDs.",
-      parentPage: pageId,
-      databases: ids,
+      databases: { budget, schedule, investments, vr, videos, goals },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
