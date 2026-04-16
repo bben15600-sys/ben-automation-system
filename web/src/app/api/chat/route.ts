@@ -11,10 +11,10 @@ const SYSTEM_PROMPT = `אתה העוזר האישי של בן. שמך oslife.
 
 const FALLBACK_MODELS: Record<Tier, string[]> = {
   free: [
-    "deepseek/deepseek-v3-0324:free",
-    "deepseek/deepseek-r1:free",
+    "google/gemini-2.0-flash-exp:free",
     "meta-llama/llama-3.3-70b-instruct:free",
     "qwen/qwen-2.5-72b-instruct:free",
+    "deepseek/deepseek-v3-0324:free",
   ],
   cheap: [
     "anthropic/claude-3.5-haiku",
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
   // Try primary model, fallback to alternatives on 404
   let response = await tryModel(route.model, messages);
 
-  if (!response.ok && response.status === 404 && !forceModel) {
+  if (!response.ok && (response.status === 404 || response.status === 400) && !forceModel) {
     const tier = classifyMessage(lastText, hasImage);
     const fallbacks = FALLBACK_MODELS[tier].filter((m) => m !== route.model);
     for (const fallbackModel of fallbacks) {
