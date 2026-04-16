@@ -5,8 +5,8 @@ import ChatBot from "@/components/ChatBot";
 
 const MODELS = [
   { value: "", label: "אוטומטי", desc: "ניתוב חכם לפי סוג השאלה", tier: "auto" },
-  { value: "deepseek/deepseek-chat:free", label: "DeepSeek V3", desc: "חינם — שאלות פשוטות", tier: "free" },
-  { value: "meta-llama/llama-4-maverick:free", label: "Llama 4", desc: "חינם — חשיבה מורכבת", tier: "free" },
+  { value: "deepseek/deepseek-v3-0324:free", label: "DeepSeek V3", desc: "חינם — שאלות פשוטות", tier: "free" },
+  { value: "deepseek/deepseek-r1:free", label: "DeepSeek R1", desc: "חינם — חשיבה מורכבת", tier: "free" },
   { value: "anthropic/claude-3.5-haiku", label: "Claude Haiku", desc: "זול — עברית מעולה", tier: "cheap" },
   { value: "google/gemini-2.0-flash-001", label: "Gemini Flash", desc: "זול — מהיר", tier: "cheap" },
   { value: "anthropic/claude-sonnet-4", label: "Claude Sonnet", desc: "פרימיום — הכי חכם", tier: "premium" },

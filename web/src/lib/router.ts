@@ -8,8 +8,10 @@ export interface RouteResult {
 
 const MODELS: Record<Tier, RouteResult[]> = {
   free: [
-    { model: "deepseek/deepseek-chat:free", tier: "free", label: "DeepSeek V3" },
-    { model: "meta-llama/llama-4-maverick:free", tier: "free", label: "Llama 4" },
+    { model: "deepseek/deepseek-v3-0324:free", tier: "free", label: "DeepSeek V3" },
+    { model: "deepseek/deepseek-r1:free", tier: "free", label: "DeepSeek R1" },
+    { model: "meta-llama/llama-3.3-70b-instruct:free", tier: "free", label: "Llama 3.3" },
+    { model: "qwen/qwen-2.5-72b-instruct:free", tier: "free", label: "Qwen 2.5" },
   ],
   cheap: [
     { model: "anthropic/claude-3.5-haiku", tier: "cheap", label: "Claude Haiku" },
