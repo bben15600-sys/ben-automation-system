@@ -51,19 +51,43 @@ export async function GET() {
   return Response.json({ pages });
 }
 
+async function createSubPage(parentId: string, title: string) {
+  const res = await fetch(`${NOTION_API}/pages`, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify({
+      parent: { type: "page_id", page_id: parentId },
+      properties: { title: [{ text: { content: title } }] },
+      icon: { type: "emoji", emoji: "🟣" },
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Failed to create sub-page: ${res.status} ${err}`);
+  }
+  const data = await res.json();
+  return data.id;
+}
+
 export async function POST(req: Request) {
   if (!NOTION_TOKEN) {
     return Response.json({ error: "NOTION_API_TOKEN not set" }, { status: 500 });
   }
 
   const body = await req.json();
-  const parentId: string = body.parentId;
+  let parentId: string = body.parentId;
 
   if (!parentId) {
-    return Response.json({ error: "parentId is required" }, { status: 400 });
+    const pages = await searchPages();
+    if (pages.length === 0) {
+      return Response.json({ error: "No accessible pages in Notion. Connect oslife to a page first." }, { status: 400 });
+    }
+    parentId = pages[0].id;
   }
 
   try {
+    const oslifePage = await createSubPage(parentId, "oslife Dashboard");
+    parentId = oslifePage;
     const [budget, schedule, investments, vr, videos, goals] = await Promise.all([
       createDatabase(parentId, "תקציב", "💰", {
         Name:     { title: {} },
