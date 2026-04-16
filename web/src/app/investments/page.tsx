@@ -1,35 +1,19 @@
 export default function InvestmentsPage() {
   return (
-    <div className="p-5 pb-24 md:pb-6 max-w-3xl mx-auto">
-      <header className="pt-4 pb-6">
-        <h1 className="text-xl font-bold mb-1">השקעות</h1>
-        <p className="text-text-muted text-sm">תיק השקעות, מניות, והקצאה</p>
-      </header>
-      <EmptyState
-        icon={<TrendingIcon />}
-        title="תיק ההשקעות בקרוב"
-        description="כשנחבר ל-Notion, תוכל לראות את התיק שלך, שינויים יומיים, והקצאה"
-      />
-    </div>
-  );
-}
-
-function EmptyState({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
-  return (
-    <div className="glass rounded-2xl p-10 flex flex-col items-center text-center">
-      <div className="w-12 h-12 rounded-xl bg-accent-purple/10 text-accent-purple flex items-center justify-center mb-4">
-        {icon}
+    <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-text-primary">השקעות</h1>
+        <p className="text-text-muted text-sm mt-0.5">תיק השקעות, מניות, והקצאה</p>
       </div>
-      <h3 className="text-sm font-bold mb-1">{title}</h3>
-      <p className="text-text-muted text-xs max-w-xs">{description}</p>
+      <div className="card p-12 flex flex-col items-center text-center">
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: "#f5f3ff", color: "#8b5cf6" }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
+          </svg>
+        </div>
+        <h3 className="text-base font-semibold text-text-primary mb-1">תיק ההשקעות בקרוב</h3>
+        <p className="text-text-muted text-sm max-w-sm">כשנחבר ל-Notion, תוכל לראות את התיק שלך, שינויים יומיים, והקצאה</p>
+      </div>
     </div>
-  );
-}
-
-function TrendingIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
-    </svg>
   );
 }
