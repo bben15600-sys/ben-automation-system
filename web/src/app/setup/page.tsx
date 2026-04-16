@@ -73,6 +73,28 @@ export default function SetupPage() {
         </div>
       )}
 
+      {status === "success" && (
+        <button onClick={async () => {
+          setStatus("creating");
+          setResult("");
+          try {
+            const res = await fetch("/api/populate", { method: "POST" });
+            const data = await res.json();
+            setResult(JSON.stringify(data, null, 2));
+            setStatus(data.success ? "success" : "error");
+          } catch {
+            setStatus("error");
+          }
+        }} style={{
+          width: "100%", padding: 16, borderRadius: 12, border: "none", marginTop: 12,
+          background: "linear-gradient(135deg, #10b981, #14b8a6)",
+          color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer",
+          boxShadow: "0 0 20px rgba(16,185,129,0.4)",
+        }}>
+          📥 מלא נתונים מהלוז השבועי
+        </button>
+      )}
+
       {result && (
         <pre style={{
           marginTop: 16, padding: 16, borderRadius: 12,
