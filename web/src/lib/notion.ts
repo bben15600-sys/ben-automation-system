@@ -2,12 +2,12 @@ const NOTION_TOKEN = process.env.NOTION_API_TOKEN || "";
 const NOTION_API = "https://api.notion.com/v1";
 
 const DB = {
-  budget:      "295bb07d-d7b9-8176-a6bd-000b6ad23eca",
-  schedule:    "ac656f74-60b6-41a3-adc2-49e6656c3845",
-  investments: "30c5ed27-8b02-439a-a510-de4601e22a30",
-  vr:          "8d15b9e6-8aed-47fc-97bc-38f1570dea79",
-  videos:      "36f48996-4d93-4080-b805-5b59f8f51e0b",
-  daily:       "bfcfbfe8-e343-43d2-85a6-f12668150157",
+  budget:      "344bb07d-d7b9-81ab-99c9-d7dc34c0b5f5",
+  schedule:    "344bb07d-d7b9-8127-9971-e4bd6f0c5815",
+  investments: "344bb07d-d7b9-818a-8248-fe3c22d5ecf8",
+  vr:          "344bb07d-d7b9-8198-9b3c-e52735071657",
+  videos:      "344bb07d-d7b9-810d-a47e-e15420ddda40",
+  goals:       "344bb07d-d7b9-81e2-883e-e9e9eb528682",
 };
 
 export interface DashboardData {
@@ -89,11 +89,12 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const today = new Date().toISOString().split("T")[0];
   const monthStart = today.slice(0, 7) + "-01";
 
-  const [budgetPages, schedulePages, investPages, vrPages] = await Promise.all([
+  const [budgetPages, schedulePages, investPages, vrPages, goalsPages] = await Promise.all([
     queryDb(DB.budget, { property: "Date", date: { on_or_after: monthStart } }),
     queryDb(DB.schedule, { property: "Date", date: { equals: today } }, 20),
     queryDb(DB.investments, undefined, 50),
     queryDb(DB.vr, { property: "Date", date: { on_or_after: today } }, 10),
+    queryDb(DB.goals, undefined, 20),
   ]);
 
   const budgetTotal = budgetPages.reduce((s: number, p) => s + getPropNumber(p, "Amount"), 0);
@@ -115,7 +116,12 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     investments:  { total: Math.round(investTotal), change: "+0%", trend: investTrend },
     todayEvents:  { count: todayItems.length, items: todayItems },
     vrEvents:     { count: vrPages.length },
-    goals:        [],
+    goals:        goalsPages.map((p, i) => ({
+      label: getPropText(p, "Name") || "יעד",
+      done:  getPropNumber(p, "Done"),
+      target: getPropNumber(p, "Target"),
+      color: COLORS[i % COLORS.length],
+    })),
     weekActivity: { tasks: [4, 6, 3, 7, 5, 2, 1], events: [2, 3, 1, 4, 2, 1, 0] },
   };
 }

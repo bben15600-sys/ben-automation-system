@@ -28,12 +28,12 @@ Secrets go in environment variables — never committed to the repo (see `.gitig
 
 | Database | Collection ID |
 |---|---|
-| Rotation Schedule | `ac656f74-60b6-41a3-adc2-49e6656c3845` |
-| Budget | `295bb07d-d7b9-8176-a6bd-000b6ad23eca` |
-| VR Events | `8d15b9e6-8aed-47fc-97bc-38f1570dea79` |
-| Video Projects | `36f48996-4d93-4080-b805-5b59f8f51e0b` |
-| Investments | `30c5ed27-8b02-439a-a510-de4601e22a30` |
-| Daily Brief | `bfcfbfe8-e343-43d2-85a6-f12668150157` |
+| Budget (תקציב) | `344bb07d-d7b9-81ab-99c9-d7dc34c0b5f5` |
+| Schedule (לוז יומי) | `344bb07d-d7b9-8127-9971-e4bd6f0c5815` |
+| Investments (השקעות) | `344bb07d-d7b9-818a-8248-fe3c22d5ecf8` |
+| VR Events (אירועי VR) | `344bb07d-d7b9-8198-9b3c-e52735071657` |
+| Videos (פרויקטי וידאו) | `344bb07d-d7b9-810d-a47e-e15420ddda40` |
+| Goals (יעדים שבועיים) | `344bb07d-d7b9-81e2-883e-e9e9eb528682` |
 
 ## Agent Structure
 
