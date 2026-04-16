@@ -1,122 +1,113 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
   return (
     <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">שלום, בן</h1>
-        <p className="text-text-muted text-sm mt-0.5">הנה הסיכום שלך להיום</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">שלום, בן</h1>
+          <p className="text-text-muted text-sm mt-0.5">הנה הסיכום שלך להיום</p>
+        </div>
+        <div className="text-xs text-text-muted bg-bg-card border border-border-subtle rounded-lg px-3 py-1.5">
+          {new Date().toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" })}
+        </div>
       </div>
 
-      {/* Metric Cards */}
+      {/* Metric Cards with Sparklines */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
-        <MetricCard
-          label="אירועים היום"
-          value="0"
-          change="+2 מאתמול"
-          color="#3b82f6"
-          bg="#eff6ff"
-          icon="calendar"
-        />
-        <MetricCard
-          label="תקציב חודשי"
-          value="--"
-          change="ממתין לנתונים"
-          color="#10b981"
-          bg="#ecfdf5"
-          icon="wallet"
-        />
-        <MetricCard
-          label="תיק השקעות"
-          value="--"
-          change="ממתין לנתונים"
-          color="#8b5cf6"
-          bg="#f5f3ff"
-          icon="trending"
-        />
-        <MetricCard
-          label="יעדים שבועיים"
-          value="0/5"
-          change="60% הושלם"
-          color="#f59e0b"
-          bg="#fffbeb"
-          icon="target"
-        />
+        <MetricCard label="אירועים היום" value={3} suffix="" color="#3b82f6" bg="#eff6ff" trend={[1,3,2,4,3,5,3]} change="+2" />
+        <MetricCard label="הוצאות החודש" value={4250} suffix="₪" color="#10b981" bg="#ecfdf5" trend={[8,6,7,5,4,6,4]} change="-12%" />
+        <MetricCard label="תיק השקעות" value={52300} suffix="₪" color="#8b5cf6" bg="#f5f3ff" trend={[3,4,3,5,6,5,7]} change="+3.2%" />
+        <MetricCard label="אירועי VR" value={2} suffix="" color="#ec4899" bg="#fdf2f8" trend={[1,2,1,3,2,2,2]} change="השבוע" />
       </div>
 
       {/* Main Grid */}
       <div className="grid md:grid-cols-3 gap-4 mb-6">
-        {/* AI Chat CTA - spans 2 cols */}
-        <Link href="/chat" className="md:col-span-2">
-          <div className="card card-interactive p-5 h-full">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent-indigo to-accent-purple flex items-center justify-center flex-shrink-0">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-bold mb-0.5">שאל את oslife AI</h3>
-                <p className="text-text-muted text-sm">צ׳אט חכם עם ניתוב אוטומטי בין מודלים — DeepSeek, Claude, Gemini ועוד</p>
-              </div>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted flex-shrink-0 rotate-180">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </div>
-          </div>
-        </Link>
-
-        {/* System Status */}
+        {/* Weekly Goals - Donut */}
         <div className="card p-5">
-          <h3 className="text-xs font-semibold text-text-muted mb-4">סטטוס מערכות</h3>
-          <div className="space-y-3">
-            <StatusRow label="צ׳אט AI" status="active" />
-            <StatusRow label="לוז שבועי" status="pending" />
-            <StatusRow label="תקציב" status="pending" />
-            <StatusRow label="השקעות" status="pending" />
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="mb-6">
-        <h2 className="text-sm font-semibold text-text-secondary mb-3">גישה מהירה</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <ActionCard href="/schedule" label="לוז שבועי" desc="אירועים ומשימות" color="#3b82f6" bg="#eff6ff" />
-          <ActionCard href="/budget" label="תקציב" desc="הכנסות והוצאות" color="#10b981" bg="#ecfdf5" />
-          <ActionCard href="/investments" label="השקעות" desc="תיק ומניות" color="#8b5cf6" bg="#f5f3ff" />
-          <ActionCard href="/vr" label="Enjoy VR" desc="אירועים והכנסות" color="#ec4899" bg="#fdf2f8" />
-        </div>
-      </div>
-
-      {/* Info Cards Row */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold">פעילות אחרונה</h3>
-            <span className="text-xs text-text-muted">היום</span>
-          </div>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="w-10 h-10 rounded-xl bg-bg-input flex items-center justify-center mb-3 text-text-muted">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-              </svg>
-            </div>
-            <p className="text-text-muted text-sm">כשנחבר ל-Notion, תראה כאן פעילות</p>
-          </div>
-        </div>
-
-        <div className="card p-5">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-5">
             <h3 className="text-sm font-semibold">יעדים שבועיים</h3>
-            <span className="text-xs text-accent-indigo font-medium">0%</span>
+            <span className="text-xs text-accent-indigo font-semibold">3/5</span>
+          </div>
+          <div className="flex justify-center mb-5">
+            <DonutChart percentage={60} color="#6366f1" />
           </div>
           <div className="space-y-3">
-            <GoalRow label="אימוני כדורסל" progress={0} target="3 פעמים" />
-            <GoalRow label="זמן עם ליהי" progress={0} target="4 ימים" />
-            <GoalRow label="למידת קורס" progress={0} target="5 שעות" />
-            <GoalRow label="אירועי VR" progress={0} target="2 אירועים" />
+            <GoalRow label="כדורסל" done={2} target={3} color="#3b82f6" />
+            <GoalRow label="זמן עם ליהי" done={3} target={4} color="#ec4899" />
+            <GoalRow label="קורס למידה" done={3} target={5} color="#f59e0b" unit="שעות" />
+            <GoalRow label="אירועי VR" done={2} target={2} color="#10b981" />
+          </div>
+        </div>
+
+        {/* Weekly Activity Chart */}
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-sm font-semibold">פעילות שבועית</h3>
+            <div className="flex gap-3 text-[10px] text-text-muted">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-accent-indigo" />משימות</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-accent-blue/30" />אירועים</span>
+            </div>
+          </div>
+          <BarChart />
+        </div>
+
+        {/* AI Chat CTA */}
+        <div className="flex flex-col gap-4">
+          <Link href="/chat" className="flex-1">
+            <div className="card card-interactive p-5 h-full flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-indigo to-accent-purple flex items-center justify-center mb-3">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-bold mb-1">שאל את oslife AI</h3>
+                <p className="text-text-muted text-xs leading-relaxed">ניתוב חכם בין מודלים — Gemini, Claude, Llama ועוד</p>
+              </div>
+              <div className="flex items-center gap-1.5 mt-4 text-accent-indigo text-xs font-medium">
+                <span>התחל שיחה</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="rotate-180"><polyline points="9 18 15 12 9 6" /></svg>
+              </div>
+            </div>
+          </Link>
+
+          {/* System Status Mini */}
+          <div className="card p-4">
+            <h3 className="text-xs font-semibold text-text-muted mb-3">סטטוס</h3>
+            <div className="space-y-2">
+              <StatusDot label="AI צ׳אט" ok />
+              <StatusDot label="Notion" ok={false} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Row */}
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        {/* Timeline */}
+        <div className="card p-5">
+          <h3 className="text-sm font-semibold mb-4">לוז היום</h3>
+          <div className="space-y-0">
+            <TimelineItem time="08:00" label="אימון בוקר" color="#3b82f6" active />
+            <TimelineItem time="10:00" label="עבודה על פרויקט וידאו" color="#f59e0b" />
+            <TimelineItem time="13:00" label="פגישה עם לקוח VR" color="#ec4899" />
+            <TimelineItem time="16:00" label="למידת קורס" color="#8b5cf6" />
+            <TimelineItem time="19:00" label="ערב עם ליהי" color="#10b981" last />
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="card p-5">
+          <h3 className="text-sm font-semibold mb-4">גישה מהירה</h3>
+          <div className="grid grid-cols-2 gap-2.5">
+            <QuickAction href="/schedule" label="לוז שבועי" desc="3 אירועים היום" color="#3b82f6" bg="#eff6ff" />
+            <QuickAction href="/budget" label="תקציב" desc="₪4,250 הוצאות" color="#10b981" bg="#ecfdf5" />
+            <QuickAction href="/investments" label="השקעות" desc="+3.2% החודש" color="#8b5cf6" bg="#f5f3ff" />
+            <QuickAction href="/vr" label="Enjoy VR" desc="2 אירועים" color="#ec4899" bg="#fdf2f8" />
           </div>
         </div>
       </div>
@@ -124,74 +115,164 @@ export default function DashboardPage() {
   );
 }
 
-function MetricCard({ label, value, change, color, bg, icon }: {
-  label: string; value: string; change: string; color: string; bg: string; icon: string;
+/* ── Animated Metric Card ── */
+function MetricCard({ label, value, suffix, color, bg, trend, change }: {
+  label: string; value: number; suffix: string; color: string; bg: string; trend: number[]; change: string;
+}) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    const duration = 800;
+    const steps = 30;
+    const increment = value / steps;
+    let current = 0;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= value) { setDisplay(value); clearInterval(timer); }
+      else setDisplay(Math.floor(current));
+    }, duration / steps);
+    return () => clearInterval(timer);
+  }, [value]);
+
+  const max = Math.max(...trend);
+  const min = Math.min(...trend);
+  const range = max - min || 1;
+  const h = 30;
+  const w = 80;
+  const points = trend.map((v, i) => `${(i / (trend.length - 1)) * w},${h - ((v - min) / range) * h}`).join(" ");
+
+  return (
+    <div className="card p-4 relative overflow-hidden">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-text-muted">{label}</span>
+        <span className="text-[10px] font-medium" style={{ color }}>{change}</span>
+      </div>
+      <div className="text-2xl font-bold" style={{ color }}>
+        {suffix === "₪" ? `₪${display.toLocaleString()}` : display}{suffix && suffix !== "₪" ? suffix : ""}
+      </div>
+      <svg width={w} height={h} className="absolute bottom-2 left-3 opacity-30">
+        <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+
+/* ── Donut Chart ── */
+function DonutChart({ percentage, color }: { percentage: number; color: string }) {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const timer = setTimeout(() => setProgress(percentage), 100);
+    return () => clearTimeout(timer);
+  }, [percentage]);
+
+  const r = 45;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (progress / 100) * circ;
+
+  return (
+    <div className="relative w-28 h-28">
+      <svg width="112" height="112" className="-rotate-90">
+        <circle cx="56" cy="56" r={r} fill="none" stroke="#e5e7eb" strokeWidth="10" />
+        <circle cx="56" cy="56" r={r} fill="none" stroke={color} strokeWidth="10"
+          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 1s ease-out" }} />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-2xl font-bold" style={{ color }}>{percentage}%</span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Goal Row ── */
+function GoalRow({ label, done, target, color, unit }: {
+  label: string; done: number; target: number; color: string; unit?: string;
+}) {
+  const pct = Math.min((done / target) * 100, 100);
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-text-secondary">{label}</span>
+        <span className="text-[10px] text-text-muted">{done}/{target} {unit || ""}</span>
+      </div>
+      <div className="w-full h-1.5 bg-bg-input rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${pct}%`, background: color }} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Bar Chart ── */
+function BarChart() {
+  const days = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+  const tasks = [4, 6, 3, 7, 5, 2, 1];
+  const events = [2, 3, 1, 4, 2, 1, 0];
+  const maxVal = Math.max(...tasks);
+
+  return (
+    <div className="flex items-end gap-2 h-36">
+      {days.map((day, i) => (
+        <div key={day} className="flex-1 flex flex-col items-center gap-1">
+          <div className="w-full flex flex-col items-center gap-0.5" style={{ height: "110px" }}>
+            <div className="w-full flex flex-col justify-end h-full gap-0.5">
+              <div className="w-full rounded-t-sm bg-accent-indigo transition-all duration-700 ease-out"
+                style={{ height: `${(tasks[i] / maxVal) * 100}%`, animationDelay: `${i * 80}ms` }} />
+              <div className="w-full rounded-b-sm bg-accent-blue/30 transition-all duration-700 ease-out"
+                style={{ height: `${(events[i] / maxVal) * 100}%`, animationDelay: `${i * 80}ms` }} />
+            </div>
+          </div>
+          <span className="text-[10px] text-text-muted">{day}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Timeline ── */
+function TimelineItem({ time, label, color, active, last }: {
+  time: string; label: string; color: string; active?: boolean; last?: boolean;
 }) {
   return (
-    <div className="metric-card" style={{ background: bg, color }}>
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${color}20` }}>
-          <IconSmall name={icon} />
-        </div>
+    <div className="flex gap-3">
+      <div className="flex flex-col items-center">
+        <div className={`w-3 h-3 rounded-full border-2 flex-shrink-0 ${active ? "" : ""}`}
+          style={{ borderColor: color, background: active ? color : "transparent" }} />
+        {!last && <div className="w-px flex-1 bg-border-subtle my-1" />}
       </div>
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="text-xs mt-0.5 opacity-70" style={{ color }}>{label}</div>
-      <div className="text-[10px] mt-1.5 opacity-50" style={{ color }}>{change}</div>
+      <div className={`pb-4 ${last ? "pb-0" : ""}`}>
+        <div className="text-[11px] text-text-muted mb-0.5">{time}</div>
+        <div className={`text-sm ${active ? "font-semibold text-text-primary" : "text-text-secondary"}`}>{label}</div>
+      </div>
     </div>
   );
 }
 
-function ActionCard({ href, label, desc, color, bg }: {
+/* ── Status Dot ── */
+function StatusDot({ label, ok }: { label: string; ok: boolean }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-xs text-text-secondary">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <div className={`w-2 h-2 rounded-full ${ok ? "bg-accent-green" : "bg-border-subtle"}`} />
+        <span className="text-[10px] text-text-muted">{ok ? "פעיל" : "ממתין"}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Quick Action ── */
+function QuickAction({ href, label, desc, color, bg }: {
   href: string; label: string; desc: string; color: string; bg: string;
 }) {
   return (
     <Link href={href}>
-      <div className="card card-interactive p-4">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: bg, color }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
+      <div className="card card-interactive p-3.5">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2" style={{ background: bg }}>
+          <div className="w-2 h-2 rounded-full" style={{ background: color }} />
         </div>
         <div className="text-sm font-semibold text-text-primary">{label}</div>
-        <div className="text-xs text-text-muted mt-0.5">{desc}</div>
+        <div className="text-[11px] text-text-muted mt-0.5">{desc}</div>
       </div>
     </Link>
   );
-}
-
-function StatusRow({ label, status }: { label: string; status: "active" | "pending" }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-text-secondary">{label}</span>
-      <div className="flex items-center gap-1.5">
-        <div className={`w-2 h-2 rounded-full ${status === "active" ? "bg-accent-green" : "bg-border-subtle"}`} />
-        <span className="text-xs text-text-muted">{status === "active" ? "פעיל" : "ממתין"}</span>
-      </div>
-    </div>
-  );
-}
-
-function GoalRow({ label, progress, target }: { label: string; progress: number; target: string }) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-sm text-text-secondary">{label}</span>
-        <span className="text-xs text-text-muted">{target}</span>
-      </div>
-      <div className="w-full h-2 bg-bg-input rounded-full overflow-hidden">
-        <div className="h-full bg-accent-indigo rounded-full transition-all" style={{ width: `${progress}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function IconSmall({ name }: { name: string }) {
-  const props = { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  const icons: Record<string, React.ReactNode> = {
-    calendar: <svg {...props}><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
-    wallet: <svg {...props}><path d="M21 12V7H5a2 2 0 010-4h14v4" /><path d="M3 5v14a2 2 0 002 2h16v-5" /></svg>,
-    trending: <svg {...props}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>,
-    target: <svg {...props}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>,
-  };
-  return <>{icons[name] || null}</>;
 }
