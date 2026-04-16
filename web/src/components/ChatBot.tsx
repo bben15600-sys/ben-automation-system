@@ -174,8 +174,8 @@ export default function ChatBot({ forceModel, mode = "general", initialMessages,
   const quickReplies = QUICK_REPLIES[mode];
 
   return (
-    <div className="flex flex-col h-full">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+    <div className="flex flex-col h-full overflow-hidden">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full min-h-[50vh]">
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-5 shadow-lg ${

@@ -84,7 +84,7 @@ export default function ChatPage() {
   }, [activeId]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-[calc(100vh-3.5rem-5rem)] md:h-[calc(100vh-4rem)] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-bg-card border-b border-border-subtle">
         <div className="flex items-center gap-2">
