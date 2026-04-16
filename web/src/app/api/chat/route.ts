@@ -4,10 +4,21 @@ import { routeMessage, classifyMessage, type RouteResult, type Tier } from "@/li
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-const SYSTEM_PROMPT = `אתה העוזר האישי של בן. שמך oslife.
+const SYSTEM_PROMPTS: Record<string, string> = {
+  general: `אתה העוזר האישי של בן. שמך oslife.
 אתה עוזר לנהל את החיים — לוז שבועי, תקציב, השקעות, עסקי VR, פרויקטי וידאו, ומערכות יחסים.
 ענה תמיד בעברית. היה קצר, ישיר, ושימושי.
-אם אתה לא יודע משהו, תגיד בכנות.`;
+אם אתה לא יודע משהו, תגיד בכנות.`,
+  code: `אתה מתכנת בכיר ואדריכל תוכנה. שמך oslife Code.
+אתה עוזר לתכנן, לכתוב, ולשפר קוד.
+כללים:
+- כתוב קוד נקי, מקצועי, ומתועד
+- השתמש ב-best practices ו-design patterns
+- תן הסברים קצרים בעברית לפני ואחרי בלוקים של קוד
+- אם יש כמה דרכים, הצע את הטובה ביותר והסבר למה
+- תמיד תן קוד שלם שאפשר להריץ, לא snippets חלקיים
+- השתמש בטייפסקריפט כשרלוונטי`,
+};
 
 const FALLBACK_MODELS: Record<Tier, string[]> = {
   free: [
@@ -22,7 +33,7 @@ const FALLBACK_MODELS: Record<Tier, string[]> = {
   ],
 };
 
-async function tryModel(model: string, apiMessages: Array<{ role: string; content: string | object[] }>) {
+async function tryModel(model: string, apiMessages: Array<{ role: string; content: string | object[] }>, mode: string) {
   return fetch(OPENROUTER_URL, {
     method: "POST",
     headers: {
@@ -33,7 +44,7 @@ async function tryModel(model: string, apiMessages: Array<{ role: string; conten
     },
     body: JSON.stringify({
       model,
-      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...apiMessages],
+      messages: [{ role: "system", content: SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.general }, ...apiMessages],
       stream: true,
     }),
   });
@@ -47,6 +58,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const messages: Array<{ role: string; content: string | object[] }> = body.messages || [];
   const forceModel: string | undefined = body.model;
+  const chatMode: string = body.mode || "general";
 
   const lastMsg = [...messages].reverse().find((m) => m.role === "user");
   const lastText = typeof lastMsg?.content === "string" ? lastMsg.content : "";
@@ -62,13 +74,13 @@ export async function POST(req: NextRequest) {
   }
 
   // Try primary model, fallback to alternatives on 404
-  let response = await tryModel(route.model, messages);
+  let response = await tryModel(route.model, messages, chatMode);
 
   if (!response.ok && (response.status === 404 || response.status === 400) && !forceModel) {
     const tier = classifyMessage(lastText, hasImage);
     const fallbacks = FALLBACK_MODELS[tier].filter((m) => m !== route.model);
     for (const fallbackModel of fallbacks) {
-      response = await tryModel(fallbackModel, messages);
+      response = await tryModel(fallbackModel, messages, chatMode);
       if (response.ok) {
         route = { model: fallbackModel, tier, label: fallbackModel.split("/").pop()?.replace(":free", "") || fallbackModel };
         break;

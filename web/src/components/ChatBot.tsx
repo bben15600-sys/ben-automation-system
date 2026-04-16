@@ -2,30 +2,19 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string | ContentPart[];
-  model?: string;
-  tier?: string;
-}
-
-type ContentPart =
-  | { type: "text"; text: string }
-  | { type: "image_url"; image_url: { url: string } };
+import { type ChatMode, type SessionMessage, type ContentPart, getTextContent, getImages } from "@/lib/sessions";
 
 interface ChatBotProps {
   forceModel?: string;
+  mode?: ChatMode;
+  initialMessages?: SessionMessage[];
+  onMessagesChange?: (messages: SessionMessage[]) => void;
 }
 
-const STORAGE_KEY = "oslife-chat-history";
-
-const QUICK_REPLIES = [
-  "מה יש לי היום?",
-  "מצב תקציב",
-  "תסכם את השבוע",
-];
+const QUICK_REPLIES: Record<ChatMode, string[]> = {
+  general: ["מה יש לי היום?", "מצב תקציב", "תסכם את השבוע"],
+  code: ["תבנה לי API", "תכתוב פונקציה", "תסביר ארכיטקטורה"],
+};
 
 const TIER_COLORS: Record<string, string> = {
   free: "#10b981",
@@ -33,18 +22,8 @@ const TIER_COLORS: Record<string, string> = {
   premium: "#8b5cf6",
 };
 
-function getTextContent(content: string | ContentPart[]): string {
-  if (typeof content === "string") return content;
-  return content.filter((p) => p.type === "text").map((p) => (p as { type: "text"; text: string }).text).join("");
-}
-
-function getImages(content: string | ContentPart[]): string[] {
-  if (typeof content === "string") return [];
-  return content.filter((p) => p.type === "image_url").map((p) => (p as { type: "image_url"; image_url: { url: string } }).image_url.url);
-}
-
-export default function ChatBot({ forceModel }: ChatBotProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function ChatBot({ forceModel, mode = "general", initialMessages, onMessagesChange }: ChatBotProps) {
+  const [messages, setMessages] = useState<SessionMessage[]>(initialMessages || []);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -53,54 +32,33 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Load from localStorage
+  // Notify parent of message changes
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setMessages(JSON.parse(saved));
-    } catch { /* ignore */ }
-  }, []);
-
-  // Save to localStorage
-  useEffect(() => {
-    if (messages.length > 0) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch { /* ignore */ }
-    }
-  }, [messages]);
+    onMessagesChange?.(messages);
+  }, [messages, onMessagesChange]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const clearChat = () => {
-    setMessages([]);
-    localStorage.removeItem(STORAGE_KEY);
-  };
-
-  // Image handling
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
       reader.onload = () => {
-        if (typeof reader.result === "string") {
-          setPendingImages((prev) => [...prev, reader.result as string]);
-        }
+        if (typeof reader.result === "string") setPendingImages((prev) => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
     });
     e.target.value = "";
   };
 
-  const removePendingImage = (idx: number) => {
-    setPendingImages((prev) => prev.filter((_, i) => i !== idx));
-  };
+  const removePendingImage = (idx: number) => setPendingImages((prev) => prev.filter((_, i) => i !== idx));
 
   const sendMessage = useCallback(async (text: string) => {
     if ((!text.trim() && pendingImages.length === 0) || isLoading) return;
 
-    // Build user message content
     let userContent: string | ContentPart[];
     if (pendingImages.length > 0) {
       const parts: ContentPart[] = [];
@@ -111,8 +69,8 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
       userContent = text.trim();
     }
 
-    const userMsg: Message = { id: crypto.randomUUID(), role: "user", content: userContent };
-    const assistantMsg: Message = { id: crypto.randomUUID(), role: "assistant", content: "" };
+    const userMsg: SessionMessage = { id: crypto.randomUUID(), role: "user", content: userContent };
+    const assistantMsg: SessionMessage = { id: crypto.randomUUID(), role: "assistant", content: "" };
 
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
     setInput("");
@@ -125,7 +83,7 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages, model: forceModel || undefined }),
+        body: JSON.stringify({ messages: apiMessages, model: forceModel || undefined, mode }),
       });
 
       const modelLabel = res.headers.get("X-Model-Label") || "AI";
@@ -179,14 +137,13 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading, forceModel, pendingImages]);
+  }, [messages, isLoading, forceModel, pendingImages, mode]);
 
   const toggleVoice = useCallback(() => {
     if (typeof window === "undefined") return;
     const SR = (window as unknown as Record<string, unknown>).SpeechRecognition ||
                (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
     if (!SR) return;
-
     if (isListening) { setIsListening(false); return; }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -198,12 +155,9 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onresult = (event: any) => {
       const transcript = Array.from(event.results as SpeechRecognitionResultList)
-        .map((r: SpeechRecognitionResult) => r[0].transcript)
-        .join("");
+        .map((r: SpeechRecognitionResult) => r[0].transcript).join("");
       setInput(transcript);
-      if (event.results[event.results.length - 1].isFinal) {
-        sendMessage(transcript);
-      }
+      if (event.results[event.results.length - 1].isFinal) sendMessage(transcript);
     };
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => setIsListening(false);
@@ -215,28 +169,39 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
   };
 
+  const isCode = mode === "code";
+  const accent = isCode ? "accent-orange" : "accent-indigo";
+  const quickReplies = QUICK_REPLIES[mode];
+
   return (
     <div className="flex flex-col h-full">
-      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full min-h-[50vh]">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent-indigo to-accent-purple flex items-center justify-center mb-5 shadow-lg">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-              </svg>
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-5 shadow-lg ${
+              isCode ? "bg-gradient-to-br from-accent-orange to-accent-red" : "bg-gradient-to-br from-accent-indigo to-accent-purple"
+            }`}>
+              {isCode ? (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+                </svg>
+              ) : (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+              )}
             </div>
-            <h2 className="text-lg font-bold text-text-primary mb-1">שלום, אני oslife</h2>
-            <p className="text-text-muted text-sm mb-2">העוזר האישי שלך. שאל אותי כל דבר.</p>
-            <p className="text-text-muted text-xs mb-8">תמונות, הודעות קוליות, וזיכרון שיחות</p>
+            <h2 className="text-lg font-bold text-text-primary mb-1">
+              {isCode ? "תכנון קוד" : "שלום, אני oslife"}
+            </h2>
+            <p className="text-text-muted text-sm mb-8">
+              {isCode ? "תאר את הפרויקט ואכתוב לך קוד מקצועי" : "העוזר האישי שלך. שאל אותי כל דבר."}
+            </p>
             <div className="flex flex-wrap justify-center gap-2">
-              {QUICK_REPLIES.map((qr) => (
-                <button
-                  key={qr}
-                  onClick={() => sendMessage(qr)}
+              {quickReplies.map((qr) => (
+                <button key={qr} onClick={() => sendMessage(qr)}
                   className="px-4 py-2.5 rounded-xl bg-bg-card border border-border-subtle text-sm text-text-secondary
-                             hover:bg-bg-card-hover hover:border-border-active hover:text-text-primary transition-all shadow-sm"
-                >
+                             hover:bg-bg-card-hover hover:border-border-active hover:text-text-primary transition-all shadow-sm">
                   {qr}
                 </button>
               ))}
@@ -246,17 +211,12 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
 
         <div className="space-y-3 max-w-2xl mx-auto">
           {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.role === "user" ? "justify-start" : "justify-end"}`}
-            >
-              <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                  msg.role === "user"
-                    ? "bg-accent-indigo text-white"
-                    : "bg-bg-card border border-border-subtle shadow-sm"
-                }`}
-              >
+            <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-start" : "justify-end"}`}>
+              <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                msg.role === "user"
+                  ? isCode ? "bg-accent-orange text-white" : "bg-accent-indigo text-white"
+                  : "bg-bg-card border border-border-subtle shadow-sm"
+              }`}>
                 {msg.role === "assistant" && msg.model && (
                   <div className="flex items-center gap-1.5 mb-2">
                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: TIER_COLORS[msg.tier || "free"] }} />
@@ -264,7 +224,6 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
                   </div>
                 )}
 
-                {/* User images */}
                 {msg.role === "user" && getImages(msg.content).length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-2">
                     {getImages(msg.content).map((img, i) => (
@@ -273,7 +232,6 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
                   </div>
                 )}
 
-                {/* Content */}
                 {(() => {
                   const text = getTextContent(msg.content);
                   if (!text && msg.role === "assistant") {
@@ -287,13 +245,13 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
                   }
                   if (msg.role === "assistant" && text) {
                     return (
-                      <div className="text-sm leading-relaxed prose-sm prose-neutral max-w-none
+                      <div className={`text-sm leading-relaxed prose-sm prose-neutral max-w-none
                                       [&_pre]:bg-bg-input [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:text-xs [&_pre]:overflow-x-auto
-                                      [&_code]:bg-bg-input [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs
+                                      [&_code]:bg-bg-input [&_code]:rounded [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-xs [&_code]:font-mono
                                       [&_ul]:pr-4 [&_ol]:pr-4 [&_li]:text-sm
                                       [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-sm [&_h1]:font-bold [&_h2]:font-bold
-                                      [&_a]:text-accent-indigo [&_a]:underline
-                                      [&_blockquote]:border-r-2 [&_blockquote]:border-accent-indigo [&_blockquote]:pr-3 [&_blockquote]:text-text-secondary">
+                                      [&_a]:text-${accent} [&_a]:underline
+                                      [&_blockquote]:border-r-2 [&_blockquote]:border-${accent} [&_blockquote]:pr-3 [&_blockquote]:text-text-secondary`}>
                         <ReactMarkdown>{text}</ReactMarkdown>
                       </div>
                     );
@@ -306,17 +264,15 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
         </div>
       </div>
 
-      {/* Pending images preview */}
+      {/* Pending images */}
       {pendingImages.length > 0 && (
         <div className="px-4 pb-2">
           <div className="max-w-2xl mx-auto flex gap-2 flex-wrap">
             {pendingImages.map((img, i) => (
               <div key={i} className="relative group">
                 <img src={img} alt="" className="w-16 h-16 object-cover rounded-xl border border-border-subtle" />
-                <button
-                  onClick={() => removePendingImage(i)}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-accent-red text-white text-xs flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                >
+                <button onClick={() => removePendingImage(i)}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-accent-red text-white text-xs flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
                   ×
                 </button>
               </div>
@@ -328,76 +284,34 @@ export default function ChatBot({ forceModel }: ChatBotProps) {
       {/* Input */}
       <div className="p-3 pb-4">
         <div className="max-w-2xl mx-auto">
-          {/* New chat button */}
-          {messages.length > 0 && (
-            <div className="flex justify-center mb-2">
-              <button onClick={clearChat} className="text-xs text-text-muted hover:text-text-secondary transition-colors flex items-center gap-1">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                שיחה חדשה
-              </button>
-            </div>
-          )}
-
           <div className="flex items-end gap-2 bg-bg-card rounded-2xl border border-border-subtle px-3 py-2.5 shadow-sm">
-            {/* Voice button */}
-            <button
-              onClick={toggleVoice}
+            <button onClick={toggleVoice} title="הודעה קולית"
               className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                isListening
-                  ? "bg-red-50 text-accent-red animate-pulse"
-                  : "text-text-muted hover:text-text-secondary hover:bg-bg-input"
-              }`}
-              title="הודעה קולית"
-            >
+                isListening ? "bg-red-50 text-accent-red animate-pulse" : "text-text-muted hover:text-text-secondary hover:bg-bg-input"
+              }`}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
-                <path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" />
-                <line x1="8" y1="23" x2="16" y2="23" />
+                <path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" />
               </svg>
             </button>
 
-            {/* Image button */}
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-text-muted hover:text-text-secondary hover:bg-bg-input transition-all"
-              title="שלח תמונה"
-            >
+            <button onClick={() => fileRef.current?.click()} title="שלח תמונה"
+              className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-text-muted hover:text-text-secondary hover:bg-bg-input transition-all">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
+                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
               </svg>
             </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageUpload}
-              className="hidden"
-            />
+            <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
 
-            {/* Text input */}
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKey}
-              placeholder={isListening ? "מקשיב..." : "כתוב הודעה..."}
-              rows={1}
-              className="flex-1 bg-transparent resize-none outline-none text-sm text-text-primary
-                         placeholder:text-text-muted max-h-32 py-1.5"
-            />
+            <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey}
+              placeholder={isListening ? "מקשיב..." : isCode ? "תאר את הקוד שאתה צריך..." : "כתוב הודעה..."} rows={1}
+              className="flex-1 bg-transparent resize-none outline-none text-sm text-text-primary placeholder:text-text-muted max-h-32 py-1.5" />
 
-            {/* Send button */}
-            <button
-              onClick={() => sendMessage(input)}
+            <button onClick={() => sendMessage(input)}
               disabled={(!input.trim() && pendingImages.length === 0) || isLoading}
-              className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center
-                         bg-accent-indigo text-white disabled:opacity-30 transition-all
-                         hover:bg-accent-indigo/90 shadow-sm"
-            >
+              className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-white disabled:opacity-30 transition-all shadow-sm ${
+                isCode ? "bg-accent-orange hover:bg-accent-orange/90" : "bg-accent-indigo hover:bg-accent-indigo/90"
+              }`}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" />
               </svg>
