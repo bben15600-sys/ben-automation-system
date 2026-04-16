@@ -80,9 +80,13 @@ export async function POST(req: NextRequest) {
   }
 
   if (!response.ok) {
-    const err = await response.text();
+    let errDetails = "";
+    try { errDetails = await response.text(); } catch { errDetails = "no details"; }
+    let parsed = null;
+    try { parsed = JSON.parse(errDetails); } catch { /* not json */ }
+    const msg = parsed?.error?.message || parsed?.error || errDetails;
     return Response.json(
-      { error: `OpenRouter error: ${response.status}`, details: err },
+      { error: `OpenRouter ${response.status}: ${typeof msg === "string" ? msg.slice(0, 200) : JSON.stringify(msg).slice(0, 200)}` },
       { status: response.status }
     );
   }
