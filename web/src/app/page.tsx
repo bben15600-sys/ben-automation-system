@@ -181,18 +181,16 @@ function GoalItem({ label, done, target, complete }: { label: string; done: numb
 
 function TimelineRow({ ev, first, last }: { ev: TimelineEvent; first: boolean; last: boolean }) {
   return (
-    <div className="flex gap-3">
-      <div className="flex flex-col items-center" style={{ width: 14 }}>
-        <div className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{
-          background: first ? "#64ffda" : "#2a2a40",
-          boxShadow: first ? "0 0 8px rgba(100,255,218,0.4)" : "none",
-        }} />
-        {!last && <div className="w-px flex-1 mt-1" style={{ background: "#2a2a40" }} />}
-      </div>
-      <div className={last ? "pb-0" : "pb-5"}>
-        <span className="metric text-[11px] text-text-muted block">{ev.time}</span>
-        <span className={`text-sm ${first ? "text-text-primary font-medium" : "text-text-secondary"}`}>{ev.label}</span>
-      </div>
+    <div className={`flex items-center gap-4 ${last ? "" : "mb-4"}`}>
+      {/* Dot */}
+      <div className="w-2 h-2 rounded-full shrink-0" style={{
+        background: first ? "#64ffda" : "#2a2a40",
+        boxShadow: first ? "0 0 6px rgba(100,255,218,0.3)" : "none",
+      }} />
+      {/* Time — fixed width */}
+      <span className="metric text-[11px] text-text-muted w-12 shrink-0 text-left">{ev.time}</span>
+      {/* Event name */}
+      <span className={`text-sm flex-1 ${first ? "text-white font-medium" : "text-text-secondary"}`}>{ev.label}</span>
     </div>
   );
 }
