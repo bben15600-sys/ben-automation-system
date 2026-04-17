@@ -61,7 +61,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="h-[calc(100vh-3rem-3.5rem)] md:h-[calc(100vh-3rem)] flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-2.75rem)] md:h-[calc(100vh-3rem)] flex flex-col overflow-hidden -mb-20 md:mb-0">
 
       {/* Page dots */}
       <div className="flex items-center justify-center gap-2 py-3 shrink-0">
@@ -81,17 +81,16 @@ export default function DashboardPage() {
       </div>
 
       {/* Swipeable pages */}
-      <div ref={scrollRef}
+      <div ref={scrollRef} dir="ltr"
         className="flex-1 flex overflow-x-auto overflow-y-hidden"
         style={{
           scrollSnapType: "x mandatory",
           WebkitOverflowScrolling: "touch",
           scrollbarWidth: "none",
-          msOverflowStyle: "none",
         }}>
 
         {/* PAGE 1: Overview */}
-        <section className="w-full shrink-0 px-6 flex flex-col justify-center items-center text-center"
+        <section dir="rtl" className="min-w-full shrink-0 px-6 flex flex-col justify-center items-center text-center"
           style={{ scrollSnapAlign: "start" }}>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
             <p className="text-sm text-text-secondary mb-2">
@@ -129,7 +128,7 @@ export default function DashboardPage() {
         </section>
 
         {/* PAGE 2: Schedule */}
-        <section className="w-full shrink-0 px-6 py-4 overflow-y-auto"
+        <section dir="rtl" className="min-w-full shrink-0 px-6 py-4 overflow-y-auto"
           style={{ scrollSnapAlign: "start" }}>
           <h2 className="text-2xl font-bold text-white mb-1">לוז היום</h2>
           <p className="text-xs text-text-muted mb-6">{d.todayEvents.count} אירועים</p>
@@ -161,7 +160,7 @@ export default function DashboardPage() {
         </section>
 
         {/* PAGE 3: Goals */}
-        <section className="w-full shrink-0 px-6 py-4 overflow-y-auto"
+        <section dir="rtl" className="min-w-full shrink-0 px-6 py-4 overflow-y-auto"
           style={{ scrollSnapAlign: "start" }}>
           <h2 className="text-2xl font-bold text-white mb-1">יעדים שבועיים</h2>
           <p className="text-xs text-text-muted mb-2">{goalsDone} מתוך {goalsTotal} הושלמו</p>
@@ -202,7 +201,7 @@ export default function DashboardPage() {
         </section>
 
         {/* PAGE 4: Money */}
-        <section className="w-full shrink-0 px-6 flex flex-col justify-center items-center text-center"
+        <section dir="rtl" className="min-w-full shrink-0 px-6 flex flex-col justify-center items-center text-center"
           style={{ scrollSnapAlign: "start" }}>
           <p className="text-xs text-text-muted mb-4">תיק השקעות</p>
           <div className="glow-teal metric text-6xl mb-2">
