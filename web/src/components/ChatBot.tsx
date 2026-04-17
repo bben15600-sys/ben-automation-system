@@ -209,13 +209,13 @@ export default function ChatBot({ forceModel, mode = "general", initialMessages,
           </div>
         )}
 
-        <div className="space-y-3 max-w-2xl mx-auto">
+        <div className="flex flex-col gap-3 max-w-2xl mx-auto">
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-start" : "justify-end"}`}>
-              <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+            <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div dir="rtl" className={`max-w-[85%] rounded-2xl px-4 py-3 text-right ${
                 msg.role === "user"
                   ? isCode ? "bg-accent-orange text-white" : "bg-accent-indigo text-white"
-                  : "bg-bg-card border border-border-subtle shadow-sm"
+                  : "neu-flat"
               }`}>
                 {msg.role === "assistant" && msg.model && (
                   <div className="flex items-center gap-1.5 mb-2">

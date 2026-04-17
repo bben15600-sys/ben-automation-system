@@ -5,10 +5,6 @@ import { motion } from "framer-motion";
 
 interface InvestItem { name: string; value: number; change: number; type: string; }
 
-const TYPE_COLORS: Record<string, string> = {
-  "מניות": "#8b8aff", "קריפטו": "#ffd93d", "חיסכון": "#64ffda",
-};
-
 const fade = (i: number) => ({
   initial: { opacity: 0, y: 14 },
   animate: { opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.4, ease: "easeOut" as const } },
@@ -28,38 +24,39 @@ export default function InvestmentsPage() {
   return (
     <div className="px-4 md:px-8 py-6 max-w-3xl mx-auto">
       <motion.div {...fade(0)} className="mb-8">
-        <p className="label-caps mb-1" style={{ color: "#8b8aff" }}>INVESTMENTS</p>
+        <p className="label-caps mb-1" style={{ color: "#64ffda" }}>INVESTMENTS</p>
         <h1 className="text-2xl font-bold text-text-primary" style={{ letterSpacing: "-0.02em" }}>תיק השקעות</h1>
       </motion.div>
 
       {/* Total */}
       <motion.div {...fade(1)} className="neu-raised p-6 mb-6 text-center">
         <span className="label-caps">שווי התיק</span>
-        <div className="metric text-4xl mt-3" style={{ color: "#8b8aff" }}><span className="currency">₪{total.toLocaleString()}</span></div>
-        <div className="metric text-sm text-text-muted mt-1">≈ ${Math.round(total / 3.65).toLocaleString()}</div>
+        <div className="metric text-4xl mt-3 text-white"><span className="currency">₪{total.toLocaleString()}</span></div>
+        <div className="metric text-sm text-text-secondary mt-1"><span className="currency">${Math.round(total / 3.65).toLocaleString()}</span></div>
       </motion.div>
 
-      {/* Allocation */}
+      {/* Holdings list */}
       {items.length > 0 && (
         <motion.div {...fade(2)} className="neu-flat p-5 mb-6">
-          <span className="label-caps block mb-4">הקצאה</span>
-          <div className="flex flex-col gap-4">
+          <span className="label-caps block mb-4">החזקות</span>
+          <div className="flex flex-col gap-5">
             {items.map((item, i) => {
-              const color = TYPE_COLORS[item.type] || "#8b8aff";
               const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
               return (
                 <div key={i}>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-text-primary">{item.name}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="metric text-xs text-text-muted"><span className="currency">₪{item.value.toLocaleString()}</span></span>
-                      <span className="metric text-sm font-bold" style={{ color }}>{pct}%</span>
-                    </div>
+                  {/* Row: name right, amount left */}
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-white">{item.name}</span>
+                    <span className="metric text-sm text-white"><span className="currency">₪{item.value.toLocaleString()}</span></span>
                   </div>
-                  <div className="track-inset h-[5px]">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
-                      transition={{ duration: 0.7, delay: i * 0.1, ease: "easeOut" as const }}
-                      className="h-full rounded-full" style={{ background: color }} />
+                  {/* Progress bar with percentage */}
+                  <div className="flex items-center gap-3">
+                    <div className="track-inset h-[5px] flex-1">
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.7, delay: i * 0.1, ease: "easeOut" as const }}
+                        className="h-full rounded-full" style={{ background: "#64ffda" }} />
+                    </div>
+                    <span className="metric text-xs text-white w-8 text-left">{pct}%</span>
                   </div>
                 </div>
               );
@@ -69,18 +66,18 @@ export default function InvestmentsPage() {
       )}
 
       {/* Monthly deposit */}
-      <motion.div {...fade(3)} className="grid grid-cols-3 gap-4">
+      <motion.div {...fade(3)} className="grid grid-cols-3 gap-3">
         <div className="neu-raised-sm p-4 text-center">
           <span className="label-caps block mb-2">חודשי</span>
-          <span className="metric text-xl" style={{ color: "#64ffda" }}>₪1,500</span>
+          <span className="metric text-lg text-white"><span className="currency">₪1,500</span></span>
         </div>
         <div className="neu-raised-sm p-4 text-center">
           <span className="label-caps block mb-2">S&P 500</span>
-          <span className="metric text-xl text-text-primary">60%</span>
+          <span className="metric text-lg text-white">60%</span>
         </div>
         <div className="neu-raised-sm p-4 text-center">
           <span className="label-caps block mb-2">NVDA</span>
-          <span className="metric text-xl" style={{ color: "#8b8aff" }}>30%</span>
+          <span className="metric text-lg text-white">30%</span>
         </div>
       </motion.div>
 
