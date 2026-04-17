@@ -1,48 +1,36 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Backgrounds */
-  --color-bg-base:     oklch(0.08 0.01 260);
-  --color-bg-surface:  oklch(0.12 0.01 260);
-  --color-bg-card:     oklch(0.14 0.012 260);
-  --color-bg-card-hover: oklch(0.17 0.015 260);
-  --color-bg-input:    oklch(0.10 0.01 260);
-  --color-bg-nav:      oklch(0.08 0.01 260);
-  --color-bg-primary:  oklch(0.08 0.01 260);
-  --color-bg-elevated: oklch(0.12 0.01 260);
+  --color-bg-base:       #1a1a2e;
+  --color-bg-card:       #1e1e2e;
+  --color-bg-card-hover: #232338;
+  --color-bg-input:      #1a1a2e;
+  --color-bg-nav:        #1a1a2e;
+  --color-bg-primary:    #1a1a2e;
+  --color-bg-elevated:   #1e1e2e;
+  --color-bg-surface:    #1e1e2e;
 
-  /* Text */
-  --color-text-primary:   oklch(0.93 0.01 260);
-  --color-text-secondary: oklch(0.65 0.02 260);
-  --color-text-muted:     oklch(0.45 0.02 260);
+  --color-text-primary:   #e8e8f0;
+  --color-text-secondary: #9090a8;
+  --color-text-muted:     #5a5a72;
 
-  /* Accent — single color, <5% surface */
-  --color-accent:      oklch(0.72 0.18 250);
-  --color-accent-soft: oklch(0.72 0.18 250 / 0.12);
+  --color-accent:      #64ffda;
+  --color-accent-soft: rgba(100, 255, 218, 0.1);
 
-  /* Semantic */
-  --color-positive:    oklch(0.72 0.16 155);
-  --color-negative:    oklch(0.65 0.20 25);
-  --color-warning:     oklch(0.78 0.15 80);
-  --color-info:        oklch(0.70 0.12 280);
+  --color-border:        rgba(255,255,255,0.04);
+  --color-border-subtle: rgba(255,255,255,0.04);
+  --color-border-active: rgba(100,255,218,0.3);
 
-  /* Borders */
-  --color-border:        oklch(0.40 0.01 260 / 0.12);
-  --color-border-active: oklch(0.65 0.15 250 / 0.4);
+  --color-accent-indigo: #8b8aff;
+  --color-accent-blue:   #64b5f6;
+  --color-accent-green:  #64ffda;
+  --color-accent-orange: #ffd93d;
+  --color-accent-red:    #ff6b8a;
+  --color-accent-pink:   #ff6b8a;
+  --color-accent-purple: #8b8aff;
+  --color-accent-cyan:   #64ffda;
+  --color-accent-teal:   #64ffda;
 
-  /* Legacy aliases for existing components */
-  --color-accent-indigo: oklch(0.72 0.18 250);
-  --color-accent-blue:   oklch(0.72 0.18 250);
-  --color-accent-green:  oklch(0.72 0.16 155);
-  --color-accent-orange: oklch(0.78 0.15 80);
-  --color-accent-red:    oklch(0.65 0.20 25);
-  --color-accent-pink:   oklch(0.70 0.15 350);
-  --color-accent-purple: oklch(0.70 0.12 280);
-  --color-accent-cyan:   oklch(0.75 0.14 220);
-  --color-accent-teal:   oklch(0.72 0.14 180);
-  --color-border-subtle: oklch(0.40 0.01 260 / 0.12);
-
-  /* Fonts */
   --font-sans: var(--font-heebo);
   --font-mono: var(--font-mono);
 }
@@ -50,29 +38,62 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: oklch(0.08 0.01 260);
-  color: oklch(0.93 0.01 260);
+  background: #1a1a2e;
+  color: #e8e8f0;
   font-family: var(--font-heebo), system-ui, sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
-::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: oklch(0.30 0.01 260); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: #2a2a40; border-radius: 99px; }
 
-/* Card — solid, no blur, no shadow */
-.card {
-  background: oklch(0.14 0.012 260);
-  border: 1px solid oklch(0.40 0.01 260 / 0.12);
+/* ── Neumorphic utilities ── */
+
+.neu-raised {
+  background: #1e1e2e;
+  box-shadow: 6px 6px 12px #161624, -6px -6px 12px #282840;
+  border-radius: 16px;
+}
+
+.neu-raised-sm {
+  background: #1e1e2e;
+  box-shadow: 3px 3px 6px #161624, -3px -3px 6px #282840;
   border-radius: 12px;
-  transition: border-color 180ms cubic-bezier(0.2, 0, 0, 1);
-}
-.card:hover {
-  border-color: oklch(0.40 0.01 260 / 0.22);
 }
 
-/* Metric numbers */
+.neu-pressed {
+  background: #1a1a2e;
+  box-shadow: inset 4px 4px 8px #161624, inset -4px -4px 8px #282840;
+  border-radius: 16px;
+}
+
+.neu-pressed-sm {
+  background: #1a1a2e;
+  box-shadow: inset 3px 3px 6px #161624, inset -3px -3px 6px #282840;
+  border-radius: 12px;
+}
+
+.neu-flat {
+  background: #1e1e2e;
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 16px;
+}
+
+.neu-interactive {
+  transition: box-shadow 180ms ease-out, transform 100ms ease-out;
+}
+.neu-interactive:hover {
+  box-shadow: 8px 8px 16px #161624, -8px -8px 16px #282840;
+}
+.neu-interactive:active {
+  transform: scale(0.98);
+  box-shadow: inset 3px 3px 6px #161624, inset -3px -3px 6px #282840;
+}
+
+/* ── Text utilities ── */
+
 .metric {
   font-family: var(--font-mono), monospace;
   font-variant-numeric: tabular-nums;
@@ -80,30 +101,29 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* All-caps label */
 .label-caps {
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: oklch(0.45 0.02 260);
+  color: #5a5a72;
 }
 
-/* Active button press */
-.btn-press:active {
-  transform: scale(0.98);
+/* ── Progress track (inset) ── */
+
+.track-inset {
+  background: #1a1a2e;
+  box-shadow: inset 2px 2px 4px #161624, inset -2px -2px 4px #282840;
+  border-radius: 99px;
 }
 
-/* Live indicator */
-@keyframes live-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-.live-dot {
-  animation: live-pulse 2.5s ease-in-out infinite;
+/* ── Legacy .card alias ── */
+.card {
+  background: #1e1e2e;
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 16px;
 }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
