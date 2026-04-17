@@ -89,15 +89,15 @@ export async function POST(req: NextRequest) {
   }
 
   if (!response.ok) {
-    let errDetails = "";
-    try { errDetails = await response.text(); } catch { errDetails = "no details"; }
-    let parsed = null;
-    try { parsed = JSON.parse(errDetails); } catch { /* not json */ }
-    const msg = parsed?.error?.message || parsed?.error || errDetails;
-    return Response.json(
-      { error: `OpenRouter ${response.status}: ${typeof msg === "string" ? msg.slice(0, 200) : JSON.stringify(msg).slice(0, 200)}` },
-      { status: response.status }
-    );
+    const status = response.status;
+    const hebrewErrors: Record<number, string> = {
+      402: "מצטער, נגמרו הקרדיטים. נסה שוב מחר או החלף מודל.",
+      429: "יותר מדי בקשות. חכה רגע ונסה שוב.",
+      500: "שגיאה בשרת. נסה שוב בעוד כמה שניות.",
+      503: "השירות לא זמין כרגע. נסה שוב בקרוב.",
+    };
+    const userMsg = hebrewErrors[status] || "משהו השתבש. נסה שוב.";
+    return Response.json({ error: userMsg }, { status });
   }
 
   const headers = new Headers({

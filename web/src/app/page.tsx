@@ -54,29 +54,29 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* Metrics — neumorphic raised cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
+      {/* Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <motion.div {...fade(2)} className="neu-raised p-5">
           <span className="label-caps">אירועים</span>
-          <div className="metric text-3xl mt-3" style={{ color: "#64ffda" }}>{d.todayEvents.count}</div>
+          <div className="metric text-3xl mt-3">{d.todayEvents.count}</div>
           <span className="text-xs text-text-muted mt-1 block">היום</span>
         </motion.div>
 
         <motion.div {...fade(3)} className="neu-raised p-5">
           <span className="label-caps">הוצאות</span>
-          <div className="metric text-2xl mt-3 text-text-primary">₪{d.budget.total.toLocaleString()}</div>
+          <div className="metric text-2xl mt-3"><span className="currency">₪{d.budget.total.toLocaleString()}</span></div>
           <span className="text-xs text-text-muted mt-1 block">החודש</span>
         </motion.div>
 
         <motion.div {...fade(4)} className="neu-raised p-5">
           <span className="label-caps">השקעות</span>
-          <div className="metric text-2xl mt-3" style={{ color: "#8b8aff" }}>₪{d.investments.total.toLocaleString()}</div>
+          <div className="metric text-2xl mt-3"><span className="currency">₪{d.investments.total.toLocaleString()}</span></div>
           <span className="text-xs text-text-muted mt-1 block">{d.investments.change}</span>
         </motion.div>
 
         <motion.div {...fade(5)} className="neu-raised p-5">
           <span className="label-caps">VR</span>
-          <div className="metric text-3xl mt-3 text-text-primary">{d.vrEvents.count}</div>
+          <div className="metric text-3xl mt-3">{d.vrEvents.count}</div>
           <span className="text-xs text-text-muted mt-1 block">אירועים</span>
         </motion.div>
       </div>
