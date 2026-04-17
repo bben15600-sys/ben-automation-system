@@ -2,146 +2,140 @@
 
 ## Visual Strategy
 
-**Archetype**: Bento Spatial + Vercel-Core hybrid
-**Mood**: Calm command center. Precise, not flashy. Like checking your instruments — everything in its place.
-**What to avoid**: Neon glow, glassmorphism blur, gradient borders, template-looking symmetric grids.
-**References**: amie.so, craft.do, vercel.com/dashboard, linear.app
+**Archetype**: Dark Micro-Neumorphism (Soft UI)
+**Mood**: Tactile, premium hardware. Like a high-end audio mixer or luxury car console.
+**Key principle**: Neumorphism ONLY on interactive elements (buttons, toggles, goals). Data stays clean and high-contrast.
+**What to avoid**: Full neumorphism on every card (too heavy). Flat/generic template look. Low contrast text.
+**References**: Neumorphism.io, Dribbble "dark neumorphism dashboard"
 
-## Color Palette (OKLCH)
+## Color Palette
 
 ```css
-@theme inline {
-  /* Backgrounds */
-  --color-bg-base:     oklch(0.08 0.01 260);    /* near-black with blue tint */
-  --color-bg-surface:  oklch(0.12 0.01 260);    /* raised surface */
-  --color-bg-card:     oklch(0.14 0.012 260);   /* card background — solid, no transparency */
-  --color-bg-hover:    oklch(0.17 0.015 260);   /* hover state */
-  --color-bg-input:    oklch(0.10 0.01 260);    /* input fields */
+/* Base surface — all neumorphic shadows are relative to this */
+--neu-base:       #1e1e2e;
+--neu-dark:       #161624;     /* shadow dark side */
+--neu-light:      #282840;     /* shadow light side */
 
-  /* Borders — alpha only, never solid gray */
-  --color-border:      oklch(0.40 0.01 260 / 0.12);
-  --color-border-active: oklch(0.65 0.15 250 / 0.4);
+/* Backgrounds */
+--bg-base:        #1a1a2e;     /* page background */
+--bg-card:        #1e1e2e;     /* card surface = neu-base */
+--bg-card-hover:  #232338;
+--bg-input:       #1a1a2e;     /* inset/pressed surface */
 
-  /* Text */
-  --color-text-primary:   oklch(0.93 0.01 260);  /* not pure white */
-  --color-text-secondary: oklch(0.65 0.02 260);
-  --color-text-muted:     oklch(0.45 0.02 260);
+/* Text */
+--text-primary:   #e8e8f0;
+--text-secondary: #9090a8;
+--text-muted:     #5a5a72;
 
-  /* Single accent — used in <5% of surface */
-  --color-accent:      oklch(0.72 0.18 250);     /* muted blue */
-  --color-accent-soft: oklch(0.72 0.18 250 / 0.12);
+/* Accent — mint/cyan, pops against dark purple-gray */
+--accent:         #64ffda;
+--accent-soft:    rgba(100, 255, 218, 0.1);
 
-  /* Semantic colors — for data only */
-  --color-positive:    oklch(0.72 0.16 155);     /* green */
-  --color-negative:    oklch(0.65 0.20 25);      /* red */
-  --color-warning:     oklch(0.78 0.15 80);      /* amber */
-  --color-info:        oklch(0.70 0.12 280);     /* purple */
+/* Semantic */
+--positive:       #64ffda;
+--negative:       #ff6b8a;
+--warning:        #ffd93d;
+--info:           #8b8aff;
+```
+
+## Neumorphic Shadows
+
+```css
+/* Raised — element pops out */
+.neu-raised {
+  background: #1e1e2e;
+  box-shadow: 6px 6px 12px #161624,
+             -6px -6px 12px #282840;
+  border-radius: 16px;
+}
+
+/* Pressed — element pushed in (completed state, active) */
+.neu-pressed {
+  background: #1a1a2e;
+  box-shadow: inset 4px 4px 8px #161624,
+              inset -4px -4px 8px #282840;
+  border-radius: 16px;
+}
+
+/* Flat card — subtle, for data containers */
+.neu-flat {
+  background: #1e1e2e;
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 16px;
+}
+
+/* Interactive hover — slightly more raised */
+.neu-raised:hover {
+  box-shadow: 8px 8px 16px #161624,
+             -8px -8px 16px #282840;
+}
+
+/* Button press */
+.neu-raised:active {
+  box-shadow: inset 3px 3px 6px #161624,
+              inset -3px -3px 6px #282840;
 }
 ```
 
 ## Typography
 
-**Primary**: Heebo (Hebrew + Latin) — already loaded, good weight range
-**Monospace**: JetBrains Mono — for numbers, metrics, code
-**No additional display font.** Contrast comes from weight and size, not font count.
+**Primary**: Heebo (Hebrew + Latin)
+**Monospace**: JetBrains Mono (numbers, metrics)
 
 ```
-Scale (Major Third — 1.25x):
-  xs:    0.75rem  / 12px
+Scale (Major Third):
+  xs:    0.75rem / 12px
   sm:    0.875rem / 14px
-  base:  1rem     / 16px
-  lg:    1.25rem  / 20px
+  base:  1rem / 16px
+  lg:    1.25rem / 20px
   xl:    1.563rem / 25px
   2xl:   1.953rem / 31px
   3xl:   2.441rem / 39px
-  hero:  3.052rem / 49px
 
-Headings: weight 800, line-height 1.1, tracking -0.025em
-Body: weight 400, line-height 1.55, tracking 0
-Numbers/metrics: JetBrains Mono weight 700, tabular-nums
-All-caps labels: weight 600, tracking 0.08em, font-size xs
+Headings: weight 700, line-height 1.1, tracking -0.02em
+Body: weight 400, line-height 1.55
+Numbers: JetBrains Mono weight 700, tabular-nums
+Labels: weight 600, tracking 0.06em, uppercase, xs size
 ```
 
-## Spacing Scale (base-8 linear)
+## Spacing Scale (base-8)
 
 ```
-1:   4px     (micro — icon gaps)
-2:   8px     (compact — inline spacing)
-3:  12px     (tight — list items)
-4:  16px     (standard — card padding mobile)
-5:  20px     (comfortable)
-6:  24px     (card padding desktop)
-8:  32px     (section gap mobile)
-10: 40px     (spacious)
-12: 48px     (section gap desktop)
-16: 64px     (page section break)
-24: 96px     (hero breathing room)
+2:   8px
+3:  12px
+4:  16px
+5:  20px
+6:  24px
+8:  32px
+12: 48px
+16: 64px
 ```
-
-Macro spacing (between sections) >> micro spacing (inside cards).
 
 ## Component Patterns
 
-**Cards**: Solid background (no blur/glass). 1px alpha border. Border-radius 12px. No box-shadow. Hover: border lightens subtly, no transform.
+**Metric Cards**: neu-flat (subtle). Number in accent color or text-primary. Label in text-muted uppercase.
 
-**Metric numbers**: JetBrains Mono, 2xl-3xl size, accent color only for the primary metric. Others in text-primary.
+**Goal Items**: neu-raised when incomplete. Transitions to neu-pressed when done. Satisfying tactile feedback.
 
-**Buttons**: Border-radius 8px (not full-round). 1px ring border. Filled buttons: bg-accent, text-bg-base. Ghost buttons: transparent + ring. Active: scale(0.98). No gradient.
+**AI Chat Button**: Large neu-raised circle with accent glow. Pops out visually.
 
-**Progress bars**: Height 3px. Solid color. Border-radius 2px. Background: bg-surface. No glow.
+**Progress Bars**: Inset track (neu-pressed look), filled part in accent color.
 
-**Labels/Tags**: All-caps, xs font, tracking wide, bg-surface, border-radius 4px.
+**Navigation**: Flat, no neumorphism. Active tab gets subtle accent underline.
 
-**Lists**: Left/right border accent strip (3px) instead of colored dots.
+**Buttons**: neu-raised, :active → neu-pressed (scale 0.98). Accent border on primary.
 
-## Layout — Bento Grid
-
-Dashboard uses **asymmetric bento grid**, NOT equal columns:
+## Motion
 
 ```
-Desktop (3 columns, auto rows):
-┌──────────┬────────┐
-│  Large    │ Small  │
-│  metric   │ metric │
-├────┬─────┤────────┤
-│ Sm │ Sm  │ Medium │
-│    │     │ (goals)│
-├────┴─────┼────────┤
-│ Wide     (timeline)│
-├──────────┬────────┤
-│ Medium   │ Medium │
-│ (chart)  │ (quick)│
-└──────────┴────────┘
-
-Mobile (1 column):
-Stack vertically. Large metric spans full width.
-Small metrics: 2-column sub-grid.
+Durations: hover 120ms, standard 180ms, expand 280ms
+Easing: ease-out for entries, ease-in for exits
+Active press: scale(0.98) + shadow inset, 100ms
+Only animate: transform, opacity, box-shadow
 ```
 
-## Motion Curves
+## RTL
 
-```css
---ease-out:    cubic-bezier(0.32, 0.72, 0, 1);       /* entries, drawers */
---ease-snappy: cubic-bezier(0.2, 0, 0, 1);           /* UI transitions */
---ease-micro:  cubic-bezier(0.25, 0.1, 0.25, 1);     /* hover, subtle */
-
-Durations:
-  hover:     120ms
-  standard:  180ms
-  expand:    280ms
-  page:      350ms
-
-Rules:
-  - ease-out for entries, ease-in for exits
-  - Animate ONLY transform + opacity
-  - scale(0.98) on :active for buttons
-  - @media (prefers-reduced-motion): disable
-  - High-frequency (toggle, tab switch): 0ms
-```
-
-## RTL Considerations
-
-- All logical properties: `margin-inline-start` not `margin-left`
-- `text-align: start` not `right`
+- Light source from top-left (works for both LTR and RTL)
+- Logical properties for spacing
 - Grid flows naturally in RTL
-- Icons: don't mirror universal icons (checkmarks, plus). Mirror directional icons (arrows, chevrons).
