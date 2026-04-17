@@ -35,7 +35,7 @@ export default function InvestmentsPage() {
       {/* Total */}
       <motion.div {...fade(1)} className="neu-raised p-6 mb-6 text-center">
         <span className="label-caps">שווי התיק</span>
-        <div className="metric text-4xl mt-3" style={{ color: "#8b8aff" }}>₪{total.toLocaleString()}</div>
+        <div className="metric text-4xl mt-3" style={{ color: "#8b8aff" }}><span className="currency">₪{total.toLocaleString()}</span></div>
         <div className="metric text-sm text-text-muted mt-1">≈ ${Math.round(total / 3.65).toLocaleString()}</div>
       </motion.div>
 
@@ -52,7 +52,7 @@ export default function InvestmentsPage() {
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-text-primary">{item.name}</span>
                     <div className="flex items-center gap-2">
-                      <span className="metric text-xs text-text-muted">₪{item.value.toLocaleString()}</span>
+                      <span className="metric text-xs text-text-muted"><span className="currency">₪{item.value.toLocaleString()}</span></span>
                       <span className="metric text-sm font-bold" style={{ color }}>{pct}%</span>
                     </div>
                   </div>

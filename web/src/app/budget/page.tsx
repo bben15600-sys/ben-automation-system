@@ -40,7 +40,7 @@ export default function BudgetPage() {
       {/* Total */}
       <motion.div {...fade(1)} className="neu-raised p-6 mb-6 text-center">
         <span className="label-caps">סה"כ הוצאות</span>
-        <div className="metric text-4xl mt-3" style={{ color: "#64ffda" }}>₪{total.toLocaleString()}</div>
+        <div className="metric text-4xl mt-3" style={{ color: "#64ffda" }}><span className="currency">₪{total.toLocaleString()}</span></div>
         <span className="text-xs text-text-muted mt-1 block">{items.length} רשומות</span>
       </motion.div>
 
@@ -56,7 +56,7 @@ export default function BudgetPage() {
                 <div key={cat}>
                   <div className="flex justify-between mb-1.5">
                     <span className="text-sm text-text-secondary">{cat}</span>
-                    <span className="metric text-sm" style={{ color }}>₪{amount.toLocaleString()}</span>
+                    <span className="metric text-sm" style={{ color }}><span className="currency">₪{amount.toLocaleString()}</span></span>
                   </div>
                   <div className="track-inset h-[5px]">
                     <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
@@ -87,7 +87,7 @@ export default function BudgetPage() {
                   <span className="text-sm text-text-primary">{item.name}</span>
                   <span className="text-[10px] text-text-muted block">{d && `${d.getDate()}/${d.getMonth() + 1}`} · {item.category}</span>
                 </div>
-                <span className="metric text-sm shrink-0" style={{ color }}>₪{item.amount}</span>
+                <span className="metric text-sm shrink-0" style={{ color }}><span className="currency">₪{item.amount}</span></span>
               </div>
             );
           })}
