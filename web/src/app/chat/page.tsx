@@ -86,7 +86,8 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem-5rem)] md:h-[calc(100vh-4rem)] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-bg-card border-b border-border-subtle">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-subtle"
+        style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)" }}>
         <div className="flex items-center gap-2">
           {/* Sessions toggle */}
           <button
@@ -141,7 +142,7 @@ export default function ChatPage() {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowModelPicker(false)} />
           <div className="absolute top-[7.5rem] md:top-[8rem] left-4 right-4 md:left-auto md:right-8 md:w-72 z-50
-                          bg-bg-card border border-border-subtle rounded-2xl p-1.5 shadow-lg">
+                          glass rounded-2xl p-1.5">
             {MODELS.map((m) => (
               <button
                 key={m.value}
@@ -165,7 +166,8 @@ export default function ChatPage() {
       {showSessions && (
         <>
           <div className="fixed inset-0 z-30 bg-black/20" onClick={() => setShowSessions(false)} />
-          <div className="fixed top-14 md:top-16 right-0 bottom-0 w-72 bg-bg-card border-l border-border-subtle z-40 flex flex-col shadow-lg">
+          <div className="fixed top-14 md:top-16 right-0 bottom-0 w-72 z-40 flex flex-col"
+            style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)", borderLeft: "1px solid rgba(255,255,255,0.08)" }}>
             <div className="p-3 border-b border-border-subtle">
               <div className="flex gap-2">
                 <button

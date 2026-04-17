@@ -24,7 +24,7 @@ export default function InvestmentsPage() {
   return (
     <div className="px-4 md:px-8 py-6 max-w-3xl mx-auto">
       <motion.div {...fade(0)} className="mb-8">
-        <p className="label-caps mb-1" style={{ color: "#64ffda" }}>INVESTMENTS</p>
+        <p className="label-caps mb-1" style={{ color: "#2dd4bf" }}>INVESTMENTS</p>
         <h1 className="text-2xl font-bold text-text-primary" style={{ letterSpacing: "-0.02em" }}>תיק השקעות</h1>
       </motion.div>
 
@@ -54,7 +54,7 @@ export default function InvestmentsPage() {
                     <div className="track-inset h-[5px] flex-1">
                       <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
                         transition={{ duration: 0.7, delay: i * 0.1, ease: "easeOut" as const }}
-                        className="h-full rounded-full" style={{ background: "#64ffda" }} />
+                        className="h-full rounded-full" style={{ background: "#2dd4bf" }} />
                     </div>
                     <span className="metric text-xs text-white w-8 text-left">{pct}%</span>
                   </div>

@@ -200,8 +200,8 @@ export default function ChatBot({ forceModel, mode = "general", initialMessages,
             <div className="flex flex-wrap justify-center gap-2">
               {quickReplies.map((qr) => (
                 <button key={qr} onClick={() => sendMessage(qr)}
-                  className="px-4 py-2.5 rounded-xl bg-bg-card border border-border-subtle text-sm text-text-secondary
-                             hover:bg-bg-card-hover hover:border-border-active hover:text-text-primary transition-all shadow-sm">
+                  className="px-4 py-2.5 rounded-xl glass-thin text-sm text-text-secondary
+                             hover:bg-bg-card-hover hover:text-text-primary transition-all">
                   {qr}
                 </button>
               ))}
@@ -284,7 +284,7 @@ export default function ChatBot({ forceModel, mode = "general", initialMessages,
       {/* Input */}
       <div className="p-3 pb-4">
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-end gap-2 bg-bg-card rounded-2xl border border-border-subtle px-3 py-2.5 shadow-sm">
+          <div className="flex items-end gap-2 glass rounded-2xl px-3 py-2.5">
             <button onClick={toggleVoice} title="הודעה קולית"
               className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
                 isListening ? "bg-red-50 text-accent-red animate-pulse" : "text-text-muted hover:text-text-secondary hover:bg-bg-input"

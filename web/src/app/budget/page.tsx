@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 interface BudgetItem { name: string; amount: number; category: string; date: string; }
 
 const CAT_COLORS: Record<string, string> = {
-  "אוכל": "#64ffda", "תחבורה": "#64b5f6", "בילויים": "#ff6b8a",
+  "אוכל": "#2dd4bf", "תחבורה": "#64b5f6", "בילויים": "#ff6b8a",
   "חשבונות": "#ffd93d", "קניות": "#8b8aff", "אחר": "#9090a8",
 };
 
@@ -33,14 +33,14 @@ export default function BudgetPage() {
   return (
     <div className="px-4 md:px-8 py-6 max-w-3xl mx-auto">
       <motion.div {...fade(0)} className="mb-8">
-        <p className="label-caps mb-1" style={{ color: "#64ffda" }}>BUDGET</p>
+        <p className="label-caps mb-1" style={{ color: "#2dd4bf" }}>BUDGET</p>
         <h1 className="text-2xl font-bold text-text-primary" style={{ letterSpacing: "-0.02em" }}>תקציב — {month}</h1>
       </motion.div>
 
       {/* Total */}
       <motion.div {...fade(1)} className="neu-raised p-6 mb-6 text-center">
         <span className="label-caps">סה"כ הוצאות</span>
-        <div className="metric text-4xl mt-3" style={{ color: "#64ffda" }}><span className="currency">₪{total.toLocaleString()}</span></div>
+        <div className="metric text-4xl mt-3" style={{ color: "#2dd4bf" }}><span className="currency">₪{total.toLocaleString()}</span></div>
         <span className="text-xs text-text-muted mt-1 block">{items.length} רשומות</span>
       </motion.div>
 

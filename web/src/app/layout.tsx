@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0e1a",
+  themeColor: "#060a14",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -36,7 +36,7 @@ export default function RootLayout({
     <html lang="he" dir="rtl" className={`${heebo.variable} ${jetbrains.variable} h-full`}>
       <body className="min-h-full bg-bg-base">
         <Navigation />
-        <main className="pt-14 pb-20 md:pb-6 min-h-screen">
+        <main className="pt-16 pb-20 md:pt-20 md:pb-8 min-h-screen">
           {children}
         </main>
       </body>

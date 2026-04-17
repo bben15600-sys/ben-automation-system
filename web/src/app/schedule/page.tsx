@@ -31,7 +31,7 @@ export default function SchedulePage() {
   return (
     <div className="px-4 md:px-8 py-6 max-w-3xl mx-auto">
       <motion.div {...fade(0)} className="mb-8">
-        <p className="label-caps mb-1" style={{ color: "#64ffda" }}>SCHEDULE</p>
+        <p className="label-caps mb-1" style={{ color: "#2dd4bf" }}>SCHEDULE</p>
         <h1 className="text-2xl font-bold text-text-primary" style={{ letterSpacing: "-0.02em" }}>לוז שבועי</h1>
       </motion.div>
 
@@ -50,14 +50,14 @@ export default function SchedulePage() {
                   {DAYS[d.getDay()]}
                 </span>
                 <span className="text-xs text-text-muted">{d.getDate()}/{d.getMonth() + 1}</span>
-                {isToday && <span className="text-[9px] font-bold px-2 py-0.5 rounded-md" style={{ background: "rgba(100,255,218,0.1)", color: "#64ffda" }}>היום</span>}
+                {isToday && <span className="text-[9px] font-bold px-2 py-0.5 rounded-md" style={{ background: "rgba(45,212,191,0.1)", color: "#2dd4bf" }}>היום</span>}
               </div>
               <div className="neu-flat overflow-hidden">
                 {events.map((ev, i) => {
                   const time = ev.date.split("T")[1]?.slice(0, 5) || "";
                   return (
                     <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i < events.length - 1 ? "border-b border-border" : ""}`}>
-                      <div className="w-[3px] h-6 rounded-sm shrink-0" style={{ background: ev.done ? "#64ffda" : "#2a2a40" }} />
+                      <div className="w-[3px] h-6 rounded-sm shrink-0" style={{ background: ev.done ? "#2dd4bf" : "rgba(255,255,255,0.08)" }} />
                       <div className="flex-1 min-w-0">
                         <span className={`text-sm ${ev.done ? "text-text-muted line-through" : "text-text-primary"}`}>{ev.name}</span>
                         <div className="text-[10px] text-text-muted mt-0.5">{time}{ev.category ? ` · ${ev.category}` : ""}</div>

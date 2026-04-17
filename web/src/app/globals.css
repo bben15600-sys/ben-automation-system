@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-bg-base:       #0a0e1a;
-  --color-bg-card:       rgba(15, 20, 35, 0.8);
-  --color-bg-card-hover: rgba(20, 28, 48, 0.9);
-  --color-bg-input:      rgba(12, 16, 28, 0.9);
-  --color-bg-nav:        rgba(10, 14, 26, 0.95);
-  --color-bg-primary:    #0a0e1a;
-  --color-bg-elevated:   rgba(15, 20, 35, 0.8);
-  --color-bg-surface:    rgba(15, 20, 35, 0.8);
+  --color-bg-base:       #060a14;
+  --color-bg-card:       rgba(255, 255, 255, 0.06);
+  --color-bg-card-hover: rgba(255, 255, 255, 0.1);
+  --color-bg-input:      rgba(255, 255, 255, 0.04);
+  --color-bg-nav:        rgba(255, 255, 255, 0.06);
+  --color-bg-primary:    #060a14;
+  --color-bg-elevated:   rgba(255, 255, 255, 0.08);
+  --color-bg-surface:    rgba(255, 255, 255, 0.06);
 
   --color-text-primary:   #ffffff;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted:     #475569;
+  --color-text-secondary: rgba(255, 255, 255, 0.6);
+  --color-text-muted:     rgba(255, 255, 255, 0.3);
 
   --color-accent:      #2dd4bf;
-  --color-accent-soft: rgba(45, 212, 191, 0.1);
+  --color-accent-soft: rgba(45, 212, 191, 0.15);
 
-  --color-border:        rgba(45, 212, 191, 0.15);
-  --color-border-subtle: rgba(45, 212, 191, 0.08);
-  --color-border-active: rgba(45, 212, 191, 0.4);
+  --color-border:        rgba(255, 255, 255, 0.1);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border-active: rgba(255, 255, 255, 0.2);
 
   --color-accent-indigo: #818cf8;
   --color-accent-blue:   #60a5fa;
@@ -28,7 +28,7 @@
   --color-accent-red:    #f87171;
   --color-accent-pink:   #f472b6;
   --color-accent-purple: #a78bfa;
-  --color-accent-cyan:   #2dd4bf;
+  --color-accent-cyan:   #22d3ee;
   --color-accent-teal:   #2dd4bf;
 
   --font-sans: var(--font-heebo);
@@ -42,29 +42,83 @@ body {
   font-family: var(--font-heebo), system-ui, sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  background: #0a0e1a;
+  position: relative;
+  z-index: 0;
+  background: #060a14;
   background-image:
-    radial-gradient(ellipse at 20% 50%, rgba(45,212,191,0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(45,212,191,0.04) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 80%, rgba(45, 212, 191, 0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 15%, rgba(139, 92, 246, 0.22) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse at 85% 75%, rgba(236, 72, 153, 0.1) 0%, transparent 40%),
+    radial-gradient(ellipse at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 45%);
   background-attachment: fixed;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: -60px;
+  background:
+    radial-gradient(ellipse at 30% 70%, rgba(45, 212, 191, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 75% 25%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+  animation: meshFloat 25s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
+}
+
+@keyframes meshFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-30px) scale(1.03); }
 }
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(45,212,191,0.2); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
 
-/* ── Bento card with teal glow border ── */
-.card {
-  background: rgba(15, 20, 35, 0.7);
-  border: 1px solid rgba(45, 212, 191, 0.12);
-  border-radius: 16px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: border-color 200ms ease-out;
+/* ── VisionOS Glass Materials ── */
+.glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
-.card:hover {
-  border-color: rgba(45, 212, 191, 0.25);
+
+.glass-thin {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-thick {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 28px;
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* ── Text ── */
@@ -81,13 +135,14 @@ body {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #475569;
+  color: rgba(255, 255, 255, 0.35);
 }
 
 /* ── Progress track ── */
-.track {
-  background: rgba(45, 212, 191, 0.08);
+.track-inset {
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 99px;
+  overflow: hidden;
 }
 
 /* ── Currency LTR ── */
@@ -97,23 +152,42 @@ body {
   display: inline-block;
 }
 
-/* ── Glow number ── */
+/* ── Glow ── */
 .glow-teal {
   color: #2dd4bf;
-  text-shadow: 0 0 20px rgba(45,212,191,0.4);
+  text-shadow: 0 0 24px rgba(45, 212, 191, 0.5);
 }
 
-/* ── Interactive press ── */
+/* ── Interactive ── */
 .btn-press:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
-/* ── Legacy aliases ── */
-.neu-raised { background: rgba(15,20,35,0.7); border: 1px solid rgba(45,212,191,0.12); border-radius: 16px; }
-.neu-raised-sm { background: rgba(15,20,35,0.7); border: 1px solid rgba(45,212,191,0.12); border-radius: 12px; }
-.neu-flat { background: rgba(15,20,35,0.7); border: 1px solid rgba(45,212,191,0.12); border-radius: 16px; }
-.neu-pressed { background: rgba(10,14,26,0.8); border: 1px solid rgba(45,212,191,0.06); border-radius: 16px; }
-.neu-pressed-sm { background: rgba(10,14,26,0.8); border: 1px solid rgba(45,212,191,0.06); border-radius: 12px; }
+/* ── Legacy aliases → VisionOS glass ── */
+.card, .neu-raised, .neu-flat {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.neu-raised-sm {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.neu-pressed, .neu-pressed-sm {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06);
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
