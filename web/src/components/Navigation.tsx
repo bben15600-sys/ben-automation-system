@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV = [
-  { href: "/",            label: "דשבורד",  icon: "⌂" },
-  { href: "/chat",        label: "AI",      icon: "◆" },
-  { href: "/schedule",    label: "לוז",     icon: "▦" },
-  { href: "/budget",      label: "תקציב",   icon: "◉" },
-  { href: "/investments", label: "השקעות",  icon: "△" },
+  { href: "/",            label: "דשבורד",  emoji: "⌂" },
+  { href: "/chat",        label: "AI",      emoji: "◆" },
+  { href: "/schedule",    label: "לוז",     emoji: "▦" },
+  { href: "/budget",      label: "תקציב",   emoji: "◉" },
+  { href: "/investments", label: "השקעות",  emoji: "△" },
 ];
 
 export default function Navigation() {
@@ -17,18 +17,14 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop */}
-      <header className="hidden md:flex fixed top-0 inset-x-0 h-14 z-50 items-center px-6"
-        style={{ background: "#1a1a2e", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-        <span className="text-sm font-bold text-text-primary tracking-tight ml-6">oslife</span>
-        <nav className="flex items-center gap-1">
+      <header className="hidden md:flex fixed top-0 inset-x-0 h-12 z-50 items-center px-5"
+        style={{ background: "rgba(10,14,26,0.9)", borderBottom: "1px solid rgba(45,212,191,0.08)", backdropFilter: "blur(12px)" }}>
+        <span className="text-sm font-bold text-white tracking-tight ml-5" style={{ textShadow: "0 0 12px rgba(45,212,191,0.3)" }}>oslife</span>
+        <nav className="flex items-center gap-0.5">
           {NAV.map(n => (
             <Link key={n.href} href={n.href}
-              className={`px-3 py-1.5 rounded-lg text-[13px] transition-colors duration-[120ms] ${
-                path === n.href
-                  ? "text-text-primary font-medium"
-                  : "text-text-muted hover:text-text-secondary"
-              }`}
-              style={path === n.href ? { color: "#64ffda" } : undefined}>
+              className="px-3 py-1.5 rounded-lg text-[13px] transition-colors duration-150"
+              style={{ color: path === n.href ? "#2dd4bf" : "#475569" }}>
               {n.label}
             </Link>
           ))}
@@ -36,20 +32,20 @@ export default function Navigation() {
       </header>
 
       {/* Mobile top */}
-      <header className="md:hidden fixed top-0 inset-x-0 h-12 z-50 flex items-center px-4"
-        style={{ background: "#1a1a2e", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-        <span className="text-sm font-bold text-text-primary tracking-tight">oslife</span>
+      <header className="md:hidden fixed top-0 inset-x-0 h-11 z-50 flex items-center px-4"
+        style={{ background: "rgba(10,14,26,0.92)", borderBottom: "1px solid rgba(45,212,191,0.08)", backdropFilter: "blur(12px)" }}>
+        <span className="text-sm font-bold text-white" style={{ textShadow: "0 0 12px rgba(45,212,191,0.3)" }}>oslife</span>
       </header>
 
       {/* Mobile bottom */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 py-1"
-        style={{ background: "#1a1a2e", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-        <div className="flex justify-around items-center">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50"
+        style={{ background: "rgba(10,14,26,0.95)", borderTop: "1px solid rgba(45,212,191,0.08)", backdropFilter: "blur(12px)" }}>
+        <div className="flex justify-around items-center py-1.5">
           {NAV.map(n => (
             <Link key={n.href} href={n.href}
-              className="flex flex-col items-center gap-0.5 py-2 px-3"
-              style={{ color: path === n.href ? "#64ffda" : "#5a5a72", transition: "color 120ms" }}>
-              <span className="text-base leading-none">{n.icon}</span>
+              className="flex flex-col items-center gap-0.5 py-1 px-2"
+              style={{ color: path === n.href ? "#2dd4bf" : "#334155", transition: "color 150ms" }}>
+              <span className="text-sm leading-none">{n.emoji}</span>
               <span className="text-[9px] font-medium">{n.label}</span>
             </Link>
           ))}

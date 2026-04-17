@@ -1,35 +1,35 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-bg-base:       #1a1a2e;
-  --color-bg-card:       #22223a;
-  --color-bg-card-hover: #2a2a44;
-  --color-bg-input:      #1a1a2e;
-  --color-bg-nav:        #1a1a2e;
-  --color-bg-primary:    #1a1a2e;
-  --color-bg-elevated:   #22223a;
-  --color-bg-surface:    #22223a;
+  --color-bg-base:       #0a0e1a;
+  --color-bg-card:       rgba(15, 20, 35, 0.8);
+  --color-bg-card-hover: rgba(20, 28, 48, 0.9);
+  --color-bg-input:      rgba(12, 16, 28, 0.9);
+  --color-bg-nav:        rgba(10, 14, 26, 0.95);
+  --color-bg-primary:    #0a0e1a;
+  --color-bg-elevated:   rgba(15, 20, 35, 0.8);
+  --color-bg-surface:    rgba(15, 20, 35, 0.8);
 
-  --color-text-primary:   #f1f1f5;
-  --color-text-secondary: #a0a0b8;
-  --color-text-muted:     #6a6a82;
+  --color-text-primary:   #ffffff;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted:     #475569;
 
-  --color-accent:      #64ffda;
-  --color-accent-soft: rgba(100, 255, 218, 0.1);
+  --color-accent:      #2dd4bf;
+  --color-accent-soft: rgba(45, 212, 191, 0.1);
 
-  --color-border:        rgba(255,255,255,0.06);
-  --color-border-subtle: rgba(255,255,255,0.06);
-  --color-border-active: rgba(100,255,218,0.3);
+  --color-border:        rgba(45, 212, 191, 0.15);
+  --color-border-subtle: rgba(45, 212, 191, 0.08);
+  --color-border-active: rgba(45, 212, 191, 0.4);
 
-  --color-accent-indigo: #8b8aff;
-  --color-accent-blue:   #64b5f6;
-  --color-accent-green:  #64ffda;
-  --color-accent-orange: #ffd93d;
-  --color-accent-red:    #ff6b8a;
-  --color-accent-pink:   #ff6b8a;
-  --color-accent-purple: #8b8aff;
-  --color-accent-cyan:   #64ffda;
-  --color-accent-teal:   #64ffda;
+  --color-accent-indigo: #818cf8;
+  --color-accent-blue:   #60a5fa;
+  --color-accent-green:  #2dd4bf;
+  --color-accent-orange: #fbbf24;
+  --color-accent-red:    #f87171;
+  --color-accent-pink:   #f472b6;
+  --color-accent-purple: #a78bfa;
+  --color-accent-cyan:   #2dd4bf;
+  --color-accent-teal:   #2dd4bf;
 
   --font-sans: var(--font-heebo);
   --font-mono: var(--font-mono);
@@ -38,104 +38,82 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: #1a1a2e;
-  color: #f1f1f5;
+  color: #ffffff;
   font-family: var(--font-heebo), system-ui, sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  background: #0a0e1a;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(45,212,191,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(45,212,191,0.04) 0%, transparent 50%);
+  background-attachment: fixed;
 }
 
-::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2a2a44; border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: rgba(45,212,191,0.2); border-radius: 99px; }
 
-/* ── Neumorphic — tight, subtle shadows ── */
-
-.neu-raised {
-  background: #22223a;
-  box-shadow: 2px 2px 5px #12121f,
-             -2px -2px 5px #2e2e4a;
+/* ── Bento card with teal glow border ── */
+.card {
+  background: rgba(15, 20, 35, 0.7);
+  border: 1px solid rgba(45, 212, 191, 0.12);
   border-radius: 16px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 200ms ease-out;
 }
-
-.neu-raised-sm {
-  background: #22223a;
-  box-shadow: 2px 2px 4px #12121f,
-             -2px -2px 4px #2e2e4a;
-  border-radius: 12px;
-}
-
-.neu-pressed {
-  background: #1a1a2e;
-  box-shadow: inset 2px 2px 5px #12121f,
-              inset -2px -2px 5px #2e2e4a;
-  border-radius: 16px;
-}
-
-.neu-pressed-sm {
-  background: #1a1a2e;
-  box-shadow: inset 2px 2px 4px #12121f,
-              inset -2px -2px 4px #2e2e4a;
-  border-radius: 12px;
-}
-
-.neu-flat {
-  background: #22223a;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
-}
-
-.neu-interactive {
-  transition: box-shadow 180ms ease-out, transform 100ms ease-out;
-}
-.neu-interactive:hover {
-  box-shadow: 3px 3px 6px #12121f, -3px -3px 6px #2e2e4a;
-}
-.neu-interactive:active {
-  transform: scale(0.98);
-  box-shadow: inset 2px 2px 4px #12121f, inset -2px -2px 4px #2e2e4a;
+.card:hover {
+  border-color: rgba(45, 212, 191, 0.25);
 }
 
 /* ── Text ── */
-
 .metric {
   font-family: var(--font-mono), monospace;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #f1f1f5;
+  color: #ffffff;
 }
 
 .label-caps {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #6a6a82;
+  color: #475569;
 }
 
 /* ── Progress track ── */
-
-.track-inset {
-  background: #191930;
-  box-shadow: inset 1px 1px 3px #10101e, inset -1px -1px 3px #252540;
+.track {
+  background: rgba(45, 212, 191, 0.08);
   border-radius: 99px;
 }
 
-/* ── Currency — force LTR for numbers with ₪ ── */
-
+/* ── Currency LTR ── */
 .currency {
   direction: ltr;
   unicode-bidi: isolate;
   display: inline-block;
 }
 
-/* ── Legacy .card ── */
-.card {
-  background: #22223a;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
+/* ── Glow number ── */
+.glow-teal {
+  color: #2dd4bf;
+  text-shadow: 0 0 20px rgba(45,212,191,0.4);
 }
+
+/* ── Interactive press ── */
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+/* ── Legacy aliases ── */
+.neu-raised { background: rgba(15,20,35,0.7); border: 1px solid rgba(45,212,191,0.12); border-radius: 16px; }
+.neu-raised-sm { background: rgba(15,20,35,0.7); border: 1px solid rgba(45,212,191,0.12); border-radius: 12px; }
+.neu-flat { background: rgba(15,20,35,0.7); border: 1px solid rgba(45,212,191,0.12); border-radius: 16px; }
+.neu-pressed { background: rgba(10,14,26,0.8); border: 1px solid rgba(45,212,191,0.06); border-radius: 16px; }
+.neu-pressed-sm { background: rgba(10,14,26,0.8); border: 1px solid rgba(45,212,191,0.06); border-radius: 12px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
