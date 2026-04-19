@@ -1,0 +1,23 @@
+name: Setup oslife Notion
+
+# Discovers DB IDs under the "oslife Dashboard" Notion page, validates their
+# schemas, and creates the Rotation DB if missing. Run once (or after adding
+# new databases) via the Actions tab → Run workflow.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run setup
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: python scripts/setup_oslife_notion.py
