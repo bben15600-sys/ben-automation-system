@@ -1,4 +1,4 @@
-name: Weekly Planner → Notion → Site → Telegram
+name: Weekly Planner → Notion → Telegram
 
 on:
   schedule:
@@ -12,7 +12,7 @@ on:
         default: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   weekly-flow:
@@ -39,40 +39,16 @@ jobs:
           WEEKLY_DB_ID:       ${{ secrets.WEEKLY_DB_ID }}
         run: python scripts/weekly_planner_bot.py
 
-      # ── Step 2: Build weekly schedule in Notion ───────────────────────────
-      - name: "2 · יצירת לוז שבועי ב-Notion"
+      # ── Step 2: Generate individual events in oslife Dashboard ────────────
+      - name: "2 · יצירת אירועים ב-Notion"
         env:
           NOTION_TOKEN:    ${{ secrets.NOTION_TOKEN }}
           ROTATION_DB_ID:  ${{ secrets.ROTATION_DB_ID }}
           WEEKLY_DB_ID:    ${{ secrets.WEEKLY_DB_ID }}
         run: python scripts/weekly_scheduler.py
 
-      # ── Step 3: Generate site HTML ────────────────────────────────────────
-      - name: "3 · יצירת אתר הלוז"
-        env:
-          NOTION_TOKEN:  ${{ secrets.NOTION_TOKEN }}
-          WEEKLY_DB_ID:  ${{ secrets.WEEKLY_DB_ID }}
-        run: python scripts/generate_site.py
-
-      # ── Step 4: Deploy to GitHub Pages ────────────────────────────────────
-      - name: "4 · פריסה ל-GitHub Pages"
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/index.html docs/calendar.ics
-          git diff --cached --quiet || git commit -m "Deploy weekly schedule site [skip ci]"
-          git pull --rebase origin master
-          git push origin master
-
-      # ── Step 5: Wait for GitHub Pages to deploy ───────────────────────────
-      - name: "5 · המתנה לפריסת GitHub Pages"
-        run: |
-          echo "Waiting 120s for GitHub Pages CDN to propagate…"
-          sleep 120
-          echo "✅ Done waiting"
-
-      # ── Step 6: Send Telegram link ────────────────────────────────────────
-      - name: "6 · שליחת קישור לאתר בטלגרם"
+      # ── Step 3: Notify user via Telegram that oslife.app is updated ───────
+      - name: "3 · שליחת קישור לאתר בטלגרם"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -83,7 +59,7 @@ jobs:
           chat_id = os.environ["TELEGRAM_CHAT_ID"].strip().replace(" ", "").replace("\n", "")
           url     = f"https://api.telegram.org/bot{token}/sendMessage"
           ts      = int(time.time())
-          site    = f"https://bben15600-sys.github.io/ben-automation-system/?t={ts}"
+          site    = f"https://oslife.app/schedule?t={ts}"
           msg = (
             "📅 <b>הלוז שלך לשבוע הבא מוכן!</b>\n\n"
             f"🔗 <a href='{site}'>לחץ כאן לצפייה</a>\n\n"
