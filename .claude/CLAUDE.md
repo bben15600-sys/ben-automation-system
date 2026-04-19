@@ -14,10 +14,13 @@ cd web && npm run lint     # ESLint
 ### Python Scripts
 ```bash
 python scripts/weekly_planner_bot.py      # Interactive Telegram questionnaire (25min timeout)
-python scripts/weekly_scheduler.py        # Generate schedule from Plan JSON → Notion
-python scripts/generate_site.py           # Build HTML + ICS from Weekly Schedule DB
+python scripts/weekly_scheduler.py        # Generate individual events in "לוז יומי" DB
+python scripts/setup_oslife_notion.py     # Discover DBs + create Rotation (one-time)
 python scripts/telegram_collect.py        # Parse filled questionnaire → Rotation DB
 python scripts/seed_rotation.py           # Populate rotation DB (one-time)
+
+# Obsolete (kept for reference, not used by workflow):
+python scripts/generate_site.py           # Old static HTML generator for docs/
 ```
 
 Requires: `pip install -r requirements.txt` (notion-client, python-dotenv)
@@ -28,9 +31,8 @@ Three-layer system: **Next.js frontend** → **API routes** → **Notion databas
 
 ### Weekly Planning Pipeline (automated via GitHub Actions every Sunday 20:00 IST)
 1. `weekly_planner_bot.py` — Telegram inline-keyboard questionnaire collects preferences
-2. `weekly_scheduler.py` — Reads Plan JSON from Rotation DB, generates 8-day schedule
-3. `generate_site.py` — Builds static HTML + ICS calendar → `/docs/`
-4. Git push → GitHub Pages deploys → Telegram notification sent
+2. `weekly_scheduler.py` — Reads Plan JSON from Rotation DB, emits individual timed events (not day blocks) into "לוז יומי" DB; oslife.app reads these directly
+3. Telegram notification with link to oslife.app/schedule
 
 ### Web App (Next.js 16.2.4, App Router)
 - **Dashboard** (`page.tsx`): Fetches `/api/dashboard` → renders metrics, goals, timeline with Framer Motion
@@ -51,12 +53,13 @@ All databases live under "oslife Dashboard" page in Notion.
 
 | Database | ID | Key Fields |
 |---|---|---|
-| Budget (תקציב) | `344bb07d-d7b9-814d-8340-ec900e1a5637` | Name, Amount, Category, Date |
-| Schedule (לוז יומי) | `344bb07d-d7b9-8147-bc66-faf98025db8d` | Name, Date, Category, Done |
-| Investments (השקעות) | `344bb07d-d7b9-810e-ab8d-c95436081d84` | Name, Value, Change, Type, Date |
-| VR Events (אירועי VR) | `344bb07d-d7b9-810c-b59d-cfb0b15b0780` | Name, Date, Location, Status |
-| Videos (פרויקטי וידאו) | `344bb07d-d7b9-8157-8804-d4288b598a2e` | Name, Status, Deadline, Platform |
-| Goals (יעדים שבועיים) | `344bb07d-d7b9-81c4-8c96-f8e9ec774c74` | Name, Done, Target, Color |
+| Budget (תקציב) | `344bb07d-d7b9-81f5-b81c-c68e52058fca` | Name, Amount, Category, Date |
+| Schedule (לוז יומי) | `344bb07d-d7b9-81d5-93ac-e7fdae80c08e` | Name, Date (with time), Category, Done |
+| Investments (השקעות) | `344bb07d-d7b9-8189-ab07-cb694b8a690d` | Name, Value, Change, Type, Date |
+| VR Events (אירועי VR) | `344bb07d-d7b9-818d-b476-e66913f38d9b` | Name, Date, Location, Status |
+| Videos (פרויקטי וידאו) | `344bb07d-d7b9-81d6-8fab-e056ba2f41f1` | Name, Status, Deadline, Platform |
+| Goals (יעדים שבועיים) | `344bb07d-d7b9-819c-ba1a-ec09b4261d94` | Name, Done, Target, Color |
+| Rotation (new) | `347bb07d-d7b9-81d9-ad13-fa7906b5f20e` | Name, Week Type, Date, Basketball Days, VR Events Count, Schedule Created, Plan JSON |
 
 Notion queries use raw `fetch` against `https://api.notion.com/v1` (not the SDK — the SDK v5 removed `databases.query`).
 
