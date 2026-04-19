@@ -120,6 +120,18 @@ def _time_mins(t: str) -> int:
         return 9999
 
 
+def _safe_time(value: str | None, default: str) -> str:
+    """Return a usable HH:MM. Empty / '00:00' / malformed → default."""
+    if not value:
+        return default
+    v = value.strip()
+    if v in ("", "00:00", "0:00"):
+        return default
+    if not _re.match(r"^\d{1,2}:\d{2}$", v):
+        return default
+    return v
+
+
 # ---------------------------------------------------------------------------
 # DB Resolution
 # ---------------------------------------------------------------------------
@@ -312,13 +324,13 @@ def home_day_anchors(
     if day_index == 7:
         has_lihi = has_basketball = has_work = has_friends = has_vr = False
 
-    bball_start = plan.get("basketball_time_start", "20:00") or "20:00"
-    bball_end = plan.get("basketball_time_end", "22:30") or "22:30"
-    lihi_start = plan.get("lihi_time_start", "18:00") or "18:00"
-    vr_start = plan.get("vr_time_start", "19:00") or "19:00"
-    dad_start = plan.get("dad_time_start", "15:00") or "15:00"
-    gp_start = plan.get("grandparents_time_start", "15:00") or "15:00"
-    friends_start = plan.get("friends_time_start", "19:00") or "19:00"
+    bball_start = _safe_time(plan.get("basketball_time_start"), "20:00")
+    bball_end = _safe_time(plan.get("basketball_time_end"), "22:30")
+    lihi_start = _safe_time(plan.get("lihi_time_start"), "19:00")
+    vr_start = _safe_time(plan.get("vr_time_start"), "19:00")
+    dad_start = _safe_time(plan.get("dad_time_start"), "15:00")
+    gp_start = _safe_time(plan.get("grandparents_time_start"), "15:00")
+    friends_start = _safe_time(plan.get("friends_time_start"), "19:00")
     work_start = plan.get("work_time_start", "") or ""
     work_end = plan.get("work_time_end", "") or ""
 
@@ -386,11 +398,15 @@ def home_day_anchors(
         anchors.append(("12:00", "🪖 בסיס — אחר הצהריים"))
         anchors.append(("20:00", "🪖 בסיס — ערב"))
 
-    elif day_index == 5:  # Saturday
+    elif has_blocked:  # Blocked overrides Saturday/regular logic
+        anchors.append((wake, "⛔ יום חסום"))
+        anchors.append(("23:00", "😴 שינה"))
+
+    elif day_index == 5:  # Saturday (only when not blocked)
         anchors.append((wake, "😴 שינה / מנוחה מלאה"))
         anchors.append(("12:30", "🍽 ארוחת צהריים"))
         if has_tennis:
-            t_start = plan.get("tennis_time_start", "") or "15:00"
+            t_start = _safe_time(plan.get("tennis_time_start"), "15:00")
             anchors.append((t_start, "🎾 טניס"))
         elif has_grandparents:
             anchors.append((gp_start, "👵 ביקור סבא וסבתא"))
@@ -399,7 +415,7 @@ def home_day_anchors(
         if has_basketball:
             anchors.append((bball_start, "🏀 כדורסל"))
             if has_dad:
-                anchors.append((dad_start, "👨‍👦 מפגש אבא"))
+                anchors.append((dad_start, "👨\u200d👦 מפגש אבא"))
             else:
                 anchors.append((bball_end, "🏠 בית"))
         elif has_lihi:
@@ -411,10 +427,6 @@ def home_day_anchors(
                             f"👬 חברים{' — ' + friends_label if friends_label else ''}"))
         else:
             anchors.append(("18:00", "🌙 זמן חופשי"))
-        anchors.append(("23:00", "😴 שינה"))
-
-    elif has_blocked:
-        anchors.append((wake, "⛔ יום חסום"))
         anchors.append(("23:00", "😴 שינה"))
 
     else:  # Regular home day
@@ -444,7 +456,7 @@ def home_day_anchors(
             anchors.append((sys_t, f"💻 מערכת ({sys_min} דק׳)"))
 
         if has_tennis:
-            t_start = plan.get("tennis_time_start", "") or "15:00"
+            t_start = _safe_time(plan.get("tennis_time_start"), "15:00")
             anchors.append((t_start, "🎾 טניס"))
 
         if has_lihi:
