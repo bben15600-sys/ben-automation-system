@@ -1,87 +1,177 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import Sparkline from "@/components/Sparkline";
 
-interface InvestItem { name: string; value: number; change: number; type: string; }
-
-const fade = (i: number) => ({
-  initial: { opacity: 0, y: 14 },
-  animate: { opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.4, ease: "easeOut" as const } },
-});
+const HOLDINGS = [
+  {
+    name: "S&P 500",
+    symbol: "VOO",
+    alloc: 60,
+    value: 109_500,
+    changePct: 0.85,
+    changeColor: "#34D399",
+    spark: "#34D399",
+    data: [100, 102, 101, 104, 103, 106, 108, 107, 110, 112, 114, 118],
+  },
+  {
+    name: "NVDA",
+    symbol: "NVDA",
+    alloc: 30,
+    value: 54_750,
+    changePct: -1.2,
+    changeColor: "#FB7185",
+    spark: "#FBBF24",
+    data: [22, 20, 24, 23, 26, 25, 22, 20, 23, 21, 24, 22],
+  },
+  {
+    name: "מזומן",
+    symbol: "Cash",
+    alloc: 10,
+    value: 18_250,
+    changePct: 0.1,
+    changeColor: "#A78BFA",
+    spark: "#A78BFA",
+    data: [10, 11, 10, 12, 11, 13, 12, 14, 13, 15, 14, 16],
+  },
+];
 
 export default function InvestmentsPage() {
-  const [items, setItems] = useState<InvestItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/investments").then(r => r.json()).then(d => {
-      setItems(d.items || []); setTotal(d.total || 0); setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
+  const total = HOLDINGS.reduce((s, h) => s + h.value, 0);
+  const usdRate = 3.65;
 
   return (
-    <div className="px-4 md:px-8 py-6 max-w-3xl mx-auto">
-      <motion.div {...fade(0)} className="mb-8">
-        <p className="label-caps mb-1" style={{ color: "#64ffda" }}>INVESTMENTS</p>
-        <h1 className="text-2xl font-bold text-text-primary" style={{ letterSpacing: "-0.02em" }}>תיק השקעות</h1>
-      </motion.div>
-
-      {/* Total */}
-      <motion.div {...fade(1)} className="neu-raised p-6 mb-6 text-center">
-        <span className="label-caps">שווי התיק</span>
-        <div className="metric text-4xl mt-3 text-white"><span className="currency">₪{total.toLocaleString()}</span></div>
-        <div className="metric text-sm text-text-secondary mt-1"><span className="currency">${Math.round(total / 3.65).toLocaleString()}</span></div>
-      </motion.div>
-
-      {/* Holdings list */}
-      {items.length > 0 && (
-        <motion.div {...fade(2)} className="neu-flat p-5 mb-6">
-          <span className="label-caps block mb-4">החזקות</span>
-          <div className="flex flex-col gap-5">
-            {items.map((item, i) => {
-              const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
-              return (
-                <div key={i}>
-                  {/* Row: name right, amount left */}
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-white">{item.name}</span>
-                    <span className="metric text-sm text-white"><span className="currency">₪{item.value.toLocaleString()}</span></span>
-                  </div>
-                  {/* Progress bar with percentage */}
-                  <div className="flex items-center gap-3">
-                    <div className="track-inset h-[5px] flex-1">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
-                        transition={{ duration: 0.7, delay: i * 0.1, ease: "easeOut" as const }}
-                        className="h-full rounded-full" style={{ background: "#64ffda" }} />
-                    </div>
-                    <span className="metric text-xs text-white w-8 text-left">{pct}%</span>
-                  </div>
-                </div>
-              );
-            })}
+    <div className="stage flex flex-col gap-5">
+      {/* Portfolio value */}
+      <section className="glass" style={{ ["--i" as string]: 0 } as React.CSSProperties}>
+        <div className="flex flex-col items-center gap-2 text-center" style={{ padding: "12px 0" }}>
+          <span className="label-caps">שווי תיק כולל</span>
+          <div className="metric glow-mint" style={{ fontSize: 56 }}>
+            <span className="currency">₪{total.toLocaleString()}</span>
           </div>
-        </motion.div>
-      )}
+          <div className="metric" style={{ fontSize: 16, color: "var(--color-ink-soft)" }}>
+            <span className="currency">≈ ${Math.round(total / usdRate).toLocaleString()}</span>
+          </div>
+          <div className="flex items-center gap-2" style={{ marginTop: 8 }}>
+            <span
+              className="metric"
+              style={{
+                fontSize: 13,
+                color: "#34D399",
+                padding: "3px 10px",
+                background: "rgba(52,211,153,0.12)",
+                borderRadius: 999,
+              }}
+            >
+              <span className="currency">+1.2%</span>
+            </span>
+            <span style={{ fontSize: 12, color: "var(--color-ink-muted)" }}>מפתיחת המסחר</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Holdings */}
+      <section className="glass" style={{ ["--i" as string]: 1 } as React.CSSProperties}>
+        <div className="card-header">
+          <h2 className="card-title">החזקות</h2>
+          <span className="label-caps">{HOLDINGS.length} נכסים</span>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {HOLDINGS.map((h) => (
+            <div key={h.symbol} className="flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "#F5F6FF" }}>{h.name}</span>
+                    <span
+                      className="metric"
+                      style={{
+                        fontSize: 10,
+                        color: "var(--color-ink-muted)",
+                        padding: "1px 6px",
+                        background: "rgba(255,255,255,0.04)",
+                        borderRadius: 4,
+                      }}
+                    >
+                      {h.symbol}
+                    </span>
+                  </div>
+                  <span
+                    className="metric"
+                    style={{ fontSize: 12, color: h.changeColor }}
+                  >
+                    <span className="currency">
+                      {h.changePct > 0 ? "+" : ""}
+                      {h.changePct}%
+                    </span>
+                  </span>
+                </div>
+                <Sparkline data={h.data} color={h.spark} width={100} height={32} />
+                <div className="flex flex-col items-start" style={{ minWidth: 120 }}>
+                  <span className="metric" style={{ fontSize: 14, color: "#F5F6FF" }}>
+                    <span className="currency">₪{h.value.toLocaleString()}</span>
+                  </span>
+                  <span style={{ fontSize: 11, color: "var(--color-ink-muted)" }}>
+                    {h.alloc}% מהתיק
+                  </span>
+                </div>
+              </div>
+              <div
+                style={{
+                  height: 4,
+                  background: "rgba(255,255,255,0.05)",
+                  borderRadius: 999,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${h.alloc}%`,
+                    height: "100%",
+                    background: h.spark,
+                    boxShadow: `0 0 6px ${h.spark}`,
+                    borderRadius: 999,
+                    transition: "width 800ms cubic-bezier(0.16,1,0.3,1)",
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Monthly deposit */}
-      <motion.div {...fade(3)} className="grid grid-cols-3 gap-3">
-        <div className="neu-raised-sm p-4 text-center">
-          <span className="label-caps block mb-2">חודשי</span>
-          <span className="metric text-lg text-white"><span className="currency">₪1,500</span></span>
+      <section className="glass" style={{ ["--i" as string]: 2 } as React.CSSProperties}>
+        <div className="card-header">
+          <h2 className="card-title">הפקדה חודשית</h2>
+          <span className="label-caps">אוטומטי</span>
         </div>
-        <div className="neu-raised-sm p-4 text-center">
-          <span className="label-caps block mb-2">S&P 500</span>
-          <span className="metric text-lg text-white">60%</span>
+        <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
+          <div
+            className="glass-inset"
+            style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 4 }}
+          >
+            <span className="label-caps">סכום</span>
+            <span className="metric" style={{ fontSize: 22, color: "#F5F6FF" }}>
+              <span className="currency">₪1,500</span>
+            </span>
+          </div>
+          <div
+            className="glass-inset"
+            style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 4 }}
+          >
+            <span className="label-caps">יעד</span>
+            <span style={{ fontSize: 14, color: "#F5F6FF" }}>S&P 500 (70%) + NVDA (30%)</span>
+          </div>
+          <div
+            className="glass-inset"
+            style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 4 }}
+          >
+            <span className="label-caps">הפקדה הבאה</span>
+            <span className="metric" style={{ fontSize: 14, color: "#F5F6FF" }}>01.05.2025</span>
+          </div>
         </div>
-        <div className="neu-raised-sm p-4 text-center">
-          <span className="label-caps block mb-2">NVDA</span>
-          <span className="metric text-lg text-white">30%</span>
-        </div>
-      </motion.div>
-
-      {loading && <div className="text-center py-12 text-text-muted">טוען...</div>}
+      </section>
     </div>
   );
 }

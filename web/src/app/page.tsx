@@ -1,157 +1,159 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import type { DashboardData } from "@/lib/notion";
+import Donut from "@/components/Donut";
 
 const MOCK: DashboardData = {
-  budget: { total: 0, trend: [] },
-  investments: { total: 0, change: "+0%", trend: [] },
-  todayEvents: { count: 0, items: [
-    { time: "08:00", label: "אימון בוקר", color: "" },
-    { time: "10:00", label: "עבודה", color: "" },
-    { time: "14:00", label: "פגישה", color: "" },
-    { time: "19:00", label: "ערב חופשי", color: "" },
-  ] },
-  vrEvents: { count: 0 },
+  budget: { total: 8_420, trend: [1200, 1800, 2300, 3200, 4100, 5600, 8420] },
+  investments: { total: 182_500, change: "+1.2%", trend: [178000, 179500, 180200, 181500, 181800, 182100, 182500] },
+  todayEvents: {
+    count: 4,
+    items: [
+      { time: "08:30", label: "פגישה עם הצוות",    color: "#60A5FA" },
+      { time: "11:00", label: "יום טיפול",           color: "#FB7185" },
+      { time: "17:30", label: "אימון טניס",          color: "#34D399" },
+      { time: "20:00", label: "שיעור בקורס",         color: "#A78BFA" },
+    ],
+  },
+  vrEvents: { count: 3 },
   goals: [
-    { label: "כדורסל", done: 2, target: 3, color: "" },
-    { label: "ליהי", done: 1, target: 3, color: "" },
-    { label: "קורס", done: 2, target: 4, color: "" },
-    { label: "טניס", done: 1, target: 2, color: "" },
+    { label: "כדורסל", done: 2, target: 3, color: "#34D399" },
+    { label: "ליהי",   done: 1, target: 3, color: "#FB7185" },
+    { label: "קורס",   done: 2, target: 4, color: "#A78BFA" },
+    { label: "טניס",   done: 1, target: 2, color: "#FBBF24" },
   ],
-  weekActivity: { tasks: [], events: [] },
+  weekActivity: { tasks: [4, 6, 3, 7, 5, 2, 1], events: [2, 3, 1, 4, 2, 1, 0] },
 };
+
+const PAGES = [
+  { id: "overview", label: "סקירה" },
+  { id: "schedule", label: "לוז" },
+  { id: "goals",    label: "יעדים" },
+  { id: "finance",  label: "כספים" },
+];
 
 export default function DashboardPage() {
   const [d, setD] = useState<DashboardData>(MOCK);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [activePage, setActivePage] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
-    fetch("/api/dashboard").then(r => r.json()).then(res => {
-      if (res.data && !res.mock) setD(res.data);
-    }).catch(() => {});
+    fetch("/api/dashboard")
+      .then((r) => r.json())
+      .then((res) => {
+        if (res?.data && !res.mock) setD(res.data);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = trackRef.current;
     if (!el) return;
-    const handleScroll = () => {
+    const onScroll = () => {
       const idx = Math.round(el.scrollLeft / el.clientWidth);
-      setActivePage(idx);
+      setActive(idx);
     };
-    el.addEventListener("scroll", handleScroll, { passive: true });
-    return () => el.removeEventListener("scroll", handleScroll);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
   }, []);
+
+  const goToPage = (i: number) => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+  };
 
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? "בוקר טוב" : hour < 18 ? "צהריים טובים" : "ערב טוב";
-  const goalsDone = d.goals.filter(g => g.done >= g.target).length;
+  const goalsDone = d.goals.filter((g) => g.done >= g.target).length;
   const goalsTotal = d.goals.length || 1;
   const goalsPct = Math.round((goalsDone / goalsTotal) * 100);
 
-  const pages = [
-    { id: "overview", label: "סקירה" },
-    { id: "schedule", label: "לוז" },
-    { id: "goals", label: "יעדים" },
-    { id: "money", label: "כספים" },
-  ];
-
   return (
-    <div className="h-[calc(100vh-2.75rem)] md:h-[calc(100vh-3rem)] flex flex-col overflow-hidden -mb-20 md:mb-0">
-
-      {/* Page dots */}
-      <div className="flex items-center justify-center gap-2 py-3 shrink-0">
-        {pages.map((p, i) => (
-          <button key={p.id} onClick={() => {
-            scrollRef.current?.scrollTo({ left: i * (scrollRef.current?.clientWidth || 0), behavior: "smooth" });
-          }}
-            className="transition-all duration-200"
-            style={{
-              width: activePage === i ? 24 : 6,
-              height: 6,
-              borderRadius: 99,
-              background: activePage === i ? "#2dd4bf" : "rgba(255,255,255,0.15)",
-            }}
+    <div className="stage" style={{ minHeight: "calc(100vh - 180px)" }}>
+      <div className="swipe-dots" style={{ ["--i" as string]: 0 } as React.CSSProperties}>
+        {PAGES.map((p, i) => (
+          <button
+            key={p.id}
+            onClick={() => goToPage(i)}
+            className={`swipe-dot${active === i ? " swipe-dot-active" : ""}`}
+            aria-label={p.label}
           />
         ))}
       </div>
 
-      {/* Swipeable pages */}
-      <div ref={scrollRef} dir="ltr"
-        className="flex-1 flex overflow-x-auto overflow-y-hidden"
-        style={{
-          scrollSnapType: "x mandatory",
-          WebkitOverflowScrolling: "touch",
-          scrollbarWidth: "none",
-        }}>
+      <div
+        ref={trackRef}
+        dir="ltr"
+        className="swipe-track"
+        style={{ ["--i" as string]: 1 } as React.CSSProperties}
+      >
+        {/* ── Page 1: Overview ───────────────────────────────────── */}
+        <section dir="rtl" className="swipe-page flex flex-col items-center justify-center text-center">
+          <p className="text-sm" style={{ color: "var(--color-ink-soft)" }}>
+            {now.toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" })}
+          </p>
+          <h1 className="display" style={{ fontSize: 44, color: "#fff", marginTop: 4, marginBottom: 28 }}>
+            {greeting}, בן
+          </h1>
 
-        {/* PAGE 1: Overview */}
-        <section dir="rtl" className="min-w-full shrink-0 px-6 flex flex-col justify-center items-center text-center"
-          style={{ scrollSnapAlign: "start" }}>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-            <p className="text-sm text-text-secondary mb-2">
-              {now.toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" })}
-            </p>
-            <h1 className="text-4xl font-extrabold text-white mb-8" style={{ letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-              {greeting}, בן
-            </h1>
-
-            <div className="flex gap-8 justify-center mb-10">
-              <div>
-                <div className="metric text-5xl glow-teal">{d.todayEvents.count}</div>
-                <p className="text-xs text-text-muted mt-1">אירועים</p>
-              </div>
-              <div className="w-px" style={{ background: "rgba(255,255,255,0.08)" }} />
-              <div>
-                <div className="metric text-5xl text-white">{goalsDone}/{goalsTotal}</div>
-                <p className="text-xs text-text-muted mt-1">יעדים</p>
-              </div>
+          <div className="flex items-center gap-8" style={{ marginBottom: 32 }}>
+            <div>
+              <div className="metric glow-lavender" style={{ fontSize: 52 }}>{d.todayEvents.count}</div>
+              <p className="text-xs" style={{ color: "var(--color-ink-muted)", marginTop: 4 }}>אירועים היום</p>
             </div>
-
-            <div className="flex gap-6 justify-center">
-              <div className="text-center">
-                <div className="metric text-2xl text-white"><span className="currency">₪{d.investments.total.toLocaleString()}</span></div>
-                <p className="text-[10px] text-text-muted mt-0.5">השקעות</p>
-              </div>
-              <div className="text-center">
-                <div className="metric text-2xl text-white"><span className="currency">₪{d.budget.total.toLocaleString()}</span></div>
-                <p className="text-[10px] text-text-muted mt-0.5">הוצאות</p>
-              </div>
+            <div style={{ width: 1, height: 48, background: "rgba(255,255,255,0.08)" }} />
+            <div>
+              <div className="metric" style={{ fontSize: 52, color: "#fff" }}>{goalsDone}<span style={{ color: "var(--color-ink-muted)" }}>/{goalsTotal}</span></div>
+              <p className="text-xs" style={{ color: "var(--color-ink-muted)", marginTop: 4 }}>יעדים השבוע</p>
             </div>
+          </div>
 
-            <p className="text-xs text-text-muted mt-10">החלק הצידה ←</p>
-          </motion.div>
+          <div className="flex gap-8" style={{ maxWidth: 480, width: "100%", justifyContent: "center" }}>
+            <div className="text-center">
+              <div className="metric" style={{ fontSize: 22, color: "#fff" }}>
+                <span className="currency">₪{d.investments.total.toLocaleString()}</span>
+              </div>
+              <p className="text-[10px]" style={{ color: "var(--color-ink-muted)", marginTop: 2 }}>תיק השקעות</p>
+            </div>
+            <div className="text-center">
+              <div className="metric" style={{ fontSize: 22, color: "#fff" }}>
+                <span className="currency">₪{d.budget.total.toLocaleString()}</span>
+              </div>
+              <p className="text-[10px]" style={{ color: "var(--color-ink-muted)", marginTop: 2 }}>הוצאות החודש</p>
+            </div>
+          </div>
+
+          <p className="text-xs" style={{ color: "var(--color-ink-muted)", marginTop: 40 }}>החלק הצידה ←</p>
         </section>
 
-        {/* PAGE 2: Schedule */}
-        <section dir="rtl" className="min-w-full shrink-0 px-6 py-4 overflow-y-auto"
-          style={{ scrollSnapAlign: "start" }}>
-          <h2 className="text-2xl font-bold text-white mb-1">לוז היום</h2>
-          <p className="text-xs text-text-muted mb-6">{d.todayEvents.count} אירועים</p>
-
-          <div className="flex flex-col gap-0">
-            {(d.todayEvents.items.length > 0 ? d.todayEvents.items : MOCK.todayEvents.items).map((ev, i, arr) => (
+        {/* ── Page 2: Schedule ──────────────────────────────────── */}
+        <section dir="rtl" className="swipe-page overflow-y-auto">
+          <h2 className="display" style={{ fontSize: 28, marginTop: 8 }}>לוז היום</h2>
+          <p className="text-xs" style={{ color: "var(--color-ink-muted)", marginBottom: 24 }}>
+            {d.todayEvents.count} אירועים
+          </p>
+          <div className="flex flex-col">
+            {d.todayEvents.items.map((ev, i, arr) => (
               <div key={i} className="flex items-stretch gap-4">
-                {/* Time column */}
                 <div className="flex flex-col items-center" style={{ width: 48 }}>
-                  <span className="metric text-xs text-text-secondary">{ev.time}</span>
+                  <span className="metric" style={{ fontSize: 12, color: "var(--color-ink-soft)" }}>{ev.time}</span>
                   {i < arr.length - 1 && (
-                    <div className="w-px flex-1 my-2" style={{ background: "rgba(45,212,191,0.12)" }} />
+                    <div className="w-px flex-1 my-2" style={{ background: "rgba(167,139,250,0.18)" }} />
                   )}
                 </div>
-                {/* Event */}
-                <div className="flex-1 pb-6">
-                  <div className="rounded-xl px-4 py-3" style={{
-                    background: i === 0 ? "rgba(45,212,191,0.08)" : "rgba(255,255,255,0.03)",
-                    border: `1px solid ${i === 0 ? "rgba(45,212,191,0.2)" : "rgba(255,255,255,0.04)"}`,
-                  }}>
-                    <span className={`text-sm ${i === 0 ? "text-white font-semibold" : "text-text-secondary"}`}>
-                      {ev.label}
-                    </span>
+                <div className="flex-1 pb-5">
+                  <div
+                    className="glass"
+                    style={{
+                      padding: "12px 16px",
+                      borderInlineStart: `3px solid ${ev.color || "#A78BFA"}`,
+                    }}
+                  >
+                    <span style={{ fontSize: 14, fontWeight: 600 }}>{ev.label}</span>
                   </div>
                 </div>
               </div>
@@ -159,39 +161,49 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* PAGE 3: Goals */}
-        <section dir="rtl" className="min-w-full shrink-0 px-6 py-4 overflow-y-auto"
-          style={{ scrollSnapAlign: "start" }}>
-          <h2 className="text-2xl font-bold text-white mb-1">יעדים שבועיים</h2>
-          <p className="text-xs text-text-muted mb-2">{goalsDone} מתוך {goalsTotal} הושלמו</p>
-
-          {/* Big circle */}
-          <div className="flex justify-center my-8">
-            <GoalCircle pct={goalsPct} />
+        {/* ── Page 3: Goals ──────────────────────────────────────── */}
+        <section dir="rtl" className="swipe-page overflow-y-auto">
+          <h2 className="display" style={{ fontSize: 28, marginTop: 8 }}>יעדים שבועיים</h2>
+          <p className="text-xs" style={{ color: "var(--color-ink-muted)", marginBottom: 28 }}>
+            {goalsDone} מתוך {goalsTotal} הושלמו
+          </p>
+          <div className="flex justify-center" style={{ marginBottom: 32 }}>
+            <Donut percent={goalsPct} color="#A78BFA" centerText={`${goalsPct}%`} size={140} stroke={10} />
           </div>
-
           <div className="flex flex-col gap-4">
-            {(d.goals.length > 0 ? d.goals : MOCK.goals).map((g, i) => {
+            {d.goals.map((g, i) => {
               const pct = Math.min((g.done / g.target) * 100, 100);
               const complete = g.done >= g.target;
               return (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                  <div
+                    className="flex items-center justify-center shrink-0"
                     style={{
-                      background: complete ? "rgba(45,212,191,0.12)" : "transparent",
-                      border: `1.5px solid ${complete ? "#2dd4bf" : "rgba(255,255,255,0.1)"}`,
-                    }}>
-                    {complete && <span style={{ color: "#2dd4bf", fontSize: 13, fontWeight: 700 }}>✓</span>}
+                      width: 24,
+                      height: 24,
+                      borderRadius: 8,
+                      background: complete ? `${g.color}22` : "transparent",
+                      border: `1.5px solid ${complete ? g.color : "rgba(255,255,255,0.1)"}`,
+                    }}
+                  >
+                    {complete && <span style={{ color: g.color, fontSize: 13, fontWeight: 700 }}>✓</span>}
                   </div>
                   <div className="flex-1">
-                    <div className="flex justify-between mb-1.5">
-                      <span className="text-sm text-white">{g.label}</span>
-                      <span className="metric text-xs text-text-muted">{g.done}/{g.target}</span>
+                    <div className="flex justify-between" style={{ marginBottom: 6 }}>
+                      <span style={{ fontSize: 13 }}>{g.label}</span>
+                      <span className="metric" style={{ fontSize: 12, color: "var(--color-ink-muted)" }}>{g.done}/{g.target}</span>
                     </div>
-                    <div className="h-1 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
-                        transition={{ duration: 0.8, ease: "easeOut" as const }}
-                        className="h-full rounded-full" style={{ background: "#2dd4bf" }} />
+                    <div style={{ height: 4, background: "rgba(255,255,255,0.05)", borderRadius: 999, overflow: "hidden" }}>
+                      <div
+                        style={{
+                          width: `${pct}%`,
+                          height: "100%",
+                          background: g.color,
+                          boxShadow: `0 0 8px ${g.color}`,
+                          borderRadius: 999,
+                          transition: "width 800ms cubic-bezier(0.16,1,0.3,1)",
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -200,90 +212,70 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* PAGE 4: Money */}
-        <section dir="rtl" className="min-w-full shrink-0 px-6 flex flex-col justify-center items-center text-center"
-          style={{ scrollSnapAlign: "start" }}>
-          <p className="text-xs text-text-muted mb-4">תיק השקעות</p>
-          <div className="glow-teal metric text-6xl mb-2">
+        {/* ── Page 4: Finance ──────────────────────────────────── */}
+        <section dir="rtl" className="swipe-page flex flex-col justify-center items-center text-center">
+          <p className="label-caps" style={{ marginBottom: 12 }}>תיק השקעות</p>
+          <div className="metric glow-mint" style={{ fontSize: 60, marginBottom: 6 }}>
             <span className="currency">₪{d.investments.total.toLocaleString()}</span>
           </div>
-          <div className="metric text-lg text-text-secondary mb-10">
+          <div className="metric" style={{ fontSize: 18, color: "var(--color-ink-soft)", marginBottom: 40 }}>
             <span className="currency">≈ ${Math.round(d.investments.total / 3.65).toLocaleString()}</span>
           </div>
 
-          <div className="w-full max-w-xs">
-            <div className="flex justify-between text-xs text-text-muted mb-6">
-              <span>הוצאות החודש</span>
-              <span className="metric text-white"><span className="currency">₪{d.budget.total.toLocaleString()}</span></span>
+          <div style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className="flex justify-between" style={{ fontSize: 13 }}>
+              <span style={{ color: "var(--color-ink-muted)" }}>הוצאות החודש</span>
+              <span className="metric" style={{ color: "#fff" }}>
+                <span className="currency">₪{d.budget.total.toLocaleString()}</span>
+              </span>
             </div>
-
-            <div className="flex justify-between text-xs text-text-muted mb-6">
-              <span>הפקדה חודשית</span>
-              <span className="metric text-white"><span className="currency">₪1,500</span></span>
+            <div className="flex justify-between" style={{ fontSize: 13 }}>
+              <span style={{ color: "var(--color-ink-muted)" }}>הפקדה חודשית</span>
+              <span className="metric" style={{ color: "#fff" }}>
+                <span className="currency">₪1,500</span>
+              </span>
             </div>
-
-            <div className="flex justify-between text-xs text-text-muted mb-6">
-              <span>VR אירועים</span>
-              <span className="metric text-white">{d.vrEvents.count}</span>
+            <div className="flex justify-between" style={{ fontSize: 13 }}>
+              <span style={{ color: "var(--color-ink-muted)" }}>VR אירועים</span>
+              <span className="metric" style={{ color: "#fff" }}>{d.vrEvents.count}</span>
             </div>
           </div>
 
-          <div className="flex gap-3 mt-4">
-            <Link href="/budget" className="px-5 py-2.5 rounded-xl text-xs font-medium text-white btn-press"
-              style={{ background: "rgba(45,212,191,0.1)", border: "1px solid rgba(45,212,191,0.2)" }}>
+          <div className="flex gap-3" style={{ marginTop: 32 }}>
+            <Link
+              href="/budget"
+              className="press"
+              style={{
+                padding: "10px 22px",
+                borderRadius: 12,
+                fontSize: 12,
+                fontWeight: 500,
+                background: "rgba(167,139,250,0.10)",
+                border: "1px solid rgba(167,139,250,0.22)",
+                color: "#F5F6FF",
+                textDecoration: "none",
+              }}
+            >
               תקציב
             </Link>
-            <Link href="/investments" className="px-5 py-2.5 rounded-xl text-xs font-medium text-white btn-press"
-              style={{ background: "rgba(45,212,191,0.1)", border: "1px solid rgba(45,212,191,0.2)" }}>
+            <Link
+              href="/investments"
+              className="press"
+              style={{
+                padding: "10px 22px",
+                borderRadius: 12,
+                fontSize: 12,
+                fontWeight: 500,
+                background: "rgba(52,211,153,0.10)",
+                border: "1px solid rgba(52,211,153,0.22)",
+                color: "#F5F6FF",
+                textDecoration: "none",
+              }}
+            >
               השקעות
             </Link>
           </div>
         </section>
-      </div>
-
-      {/* Bottom dock */}
-      <div className="shrink-0 flex items-center justify-center gap-6 py-3"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-        <Link href="/schedule" className="flex flex-col items-center gap-0.5 text-text-muted">
-          <span className="text-lg">📅</span>
-          <span className="text-[9px]">לוז</span>
-        </Link>
-        <Link href="/chat"
-          className="w-14 h-14 rounded-full flex items-center justify-center btn-press -mt-6"
-          style={{
-            background: "linear-gradient(135deg, #0f766e, #2dd4bf)",
-            boxShadow: "0 4px 20px rgba(45,212,191,0.3)",
-          }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-          </svg>
-        </Link>
-        <Link href="/investments" className="flex flex-col items-center gap-0.5 text-text-muted">
-          <span className="text-lg">📈</span>
-          <span className="text-[9px]">השקעות</span>
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function GoalCircle({ pct }: { pct: number }) {
-  const r = 54;
-  const circ = 2 * Math.PI * r;
-  const [progress, setProgress] = useState(0);
-  useEffect(() => { setTimeout(() => setProgress(pct), 200); }, [pct]);
-
-  return (
-    <div className="relative" style={{ width: 140, height: 140 }}>
-      <svg width="140" height="140" style={{ transform: "rotate(-90deg)" }}>
-        <circle cx="70" cy="70" r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
-        <circle cx="70" cy="70" r={r} fill="none" stroke="#2dd4bf" strokeWidth="8"
-          strokeDasharray={circ} strokeDashoffset={circ - (progress / 100) * circ}
-          strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 1s ease-out", filter: "drop-shadow(0 0 6px rgba(45,212,191,0.4))" }} />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="metric text-3xl text-white">{pct}%</span>
       </div>
     </div>
   );

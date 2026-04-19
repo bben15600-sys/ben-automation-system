@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Heebo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import Navigation from "@/components/Navigation";
+import ClientShell from "@/components/ClientShell";
 
 const heebo = Heebo({
   variable: "--font-heebo",
@@ -12,7 +12,7 @@ const heebo = Heebo({
 const jetbrains = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
-  weight: ["400", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -21,10 +21,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0e1a",
+  themeColor: "#0c0f24",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -33,12 +32,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="he" dir="rtl" className={`${heebo.variable} ${jetbrains.variable} h-full`}>
-      <body className="min-h-full bg-bg-base">
-        <Navigation />
-        <main className="pt-14 pb-20 md:pb-6 min-h-screen">
-          {children}
-        </main>
+    <html lang="he" dir="rtl" className={`${heebo.variable} ${jetbrains.variable}`}>
+      <body>
+        <ClientShell>{children}</ClientShell>
       </body>
     </html>
   );
