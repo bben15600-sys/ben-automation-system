@@ -187,3 +187,4 @@ Per project convention (`.claude/CLAUDE.md`):
 - Messages from the agent to the operator: Hebrew.
 - Code, tokens, comments, filenames: English.
 <!-- sync pipeline test -->
+
