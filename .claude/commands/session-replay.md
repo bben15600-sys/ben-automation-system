@@ -156,3 +156,5 @@ See `references/rubric.md` for the full 1–10 grading.
 
 `session-replay` does not replace any of the above — it complements them.
 After running `session-replay`, also run `/handoff` for the compressed continuation pointer.
+
+> Distributed via `distribute-skills.yml` (ADR 0021 search-API repo enumeration).
