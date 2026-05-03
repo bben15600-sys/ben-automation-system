@@ -27,3 +27,6 @@ logs/
 .vscode/
 .idea/
 .next/
+
+# Claude Code session artifacts
+.claude/auto-handoff/
