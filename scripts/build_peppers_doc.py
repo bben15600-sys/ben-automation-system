@@ -79,58 +79,126 @@ COLOR_HEX = {
 }
 
 
-def fetch_image(p: Pepper) -> Optional[bytes]:
-    """Try Wikipedia REST summary first, then Commons search. Return image bytes or None."""
-    headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+_DDG_SESSION: Optional[requests.Session] = None
 
-    # 1) Wikipedia REST summary endpoint — gives the article's lead image
+
+def _ddg_session() -> requests.Session:
+    global _DDG_SESSION
+    if _DDG_SESSION is None:
+        s = requests.Session()
+        s.headers.update({
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
+        })
+        _DDG_SESSION = s
+    return _DDG_SESSION
+
+
+def _ddg_vqd(query: str) -> Optional[str]:
+    import re
+    s = _ddg_session()
+    r = s.get("https://duckduckgo.com/", params={"q": query}, timeout=10)
+    if not r.ok:
+        return None
+    m = re.search(r"vqd=[\"']?([0-9-]+)", r.text)
+    return m.group(1) if m else None
+
+
+def _ddg_image_search(query: str, limit: int = 5) -> list[dict]:
+    s = _ddg_session()
+    vqd = _ddg_vqd(query)
+    if not vqd:
+        return []
+    r = s.get(
+        "https://duckduckgo.com/i.js",
+        params={"l": "us-en", "o": "json", "q": query, "vqd": vqd, "p": "1"},
+        headers={"Referer": "https://duckduckgo.com/"},
+        timeout=12,
+    )
+    if not r.ok:
+        return []
     try:
-        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{p.wiki_slug}"
-        r = requests.get(url, headers=headers, timeout=10)
+        return (r.json().get("results") or [])[:limit]
+    except Exception:
+        return []
+
+
+_WATERMARK_DOMAINS = (
+    "shutterstock.com", "dreamstime.com", "alamy.com", "istockphoto.com",
+    "gettyimages.com", "depositphotos.com", "123rf.com", "stock.adobe.com",
+    "agefotostock.com", "bigstockphoto.com", "stockfresh.com", "canstockphoto.com",
+)
+
+
+def _is_watermarked(cand: dict) -> bool:
+    url = (cand.get("image") or "").lower()
+    src = (cand.get("source") or cand.get("url") or "").lower()
+    haystack = f"{url} {src}"
+    return any(d in haystack for d in _WATERMARK_DOMAINS)
+
+
+def fetch_image(p: Pepper) -> Optional[bytes]:
+    """Search DuckDuckGo Images for the pepper, fetch first viable result.
+
+    Skips known watermarked stock-photo sources. Uses the Bing CDN thumbnail
+    (always reachable) as the actual fetch URL.
+    """
+    candidates = _ddg_image_search(f"{p.image_query} pepper", limit=15)
+    for cand in candidates:
+        if _is_watermarked(cand):
+            continue
+        for url in (cand.get("thumbnail"), cand.get("image")):
+            if not url:
+                continue
+            try:
+                ir = requests.get(
+                    url,
+                    headers={"User-Agent": "Mozilla/5.0", "Referer": "https://duckduckgo.com/"},
+                    timeout=12,
+                )
+                ct = ir.headers.get("content-type", "")
+                if ir.ok and ct.startswith("image/") and len(ir.content) > 5000:
+                    return ir.content
+            except Exception:
+                continue
+
+    # Fallback: Wikipedia REST summary (works only when not egress-blocked)
+    try:
+        r = requests.get(
+            f"https://en.wikipedia.org/api/rest_v1/page/summary/{p.wiki_slug}",
+            headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+            timeout=8,
+        )
         if r.ok:
             j = r.json()
             src = (j.get("originalimage") or {}).get("source") or (j.get("thumbnail") or {}).get("source")
             if src:
-                ir = requests.get(src, headers={"User-Agent": USER_AGENT}, timeout=15)
+                ir = requests.get(src, headers={"User-Agent": USER_AGENT}, timeout=12)
                 if ir.ok and ir.headers.get("content-type", "").startswith("image/"):
                     return ir.content
-    except Exception as e:
-        print(f"  [{p.num}] REST fetch failed: {e}", file=sys.stderr)
-
-    # 2) Commons search for variant-specific images
-    try:
-        url = "https://commons.wikimedia.org/w/api.php"
-        params = {
-            "action": "query",
-            "format": "json",
-            "generator": "search",
-            "gsrsearch": f"{p.image_query} filetype:bitmap",
-            "gsrnamespace": "6",
-            "gsrlimit": "5",
-            "prop": "imageinfo",
-            "iiprop": "url",
-            "iiurlwidth": "900",
-        }
-        r = requests.get(url, headers=headers, params=params, timeout=10)
-        if r.ok:
-            pages = (r.json().get("query") or {}).get("pages") or {}
-            for page in sorted(pages.values(), key=lambda x: x.get("index", 99)):
-                ii = (page.get("imageinfo") or [None])[0]
-                if not ii:
-                    continue
-                title = (page.get("title") or "").lower()
-                if title.endswith((".svg", ".tif", ".tiff", ".pdf")):
-                    continue
-                src = ii.get("thumburl") or ii.get("url")
-                if not src:
-                    continue
-                ir = requests.get(src, headers={"User-Agent": USER_AGENT}, timeout=15)
-                if ir.ok and ir.headers.get("content-type", "").startswith("image/"):
-                    return ir.content
-    except Exception as e:
-        print(f"  [{p.num}] Commons fetch failed: {e}", file=sys.stderr)
+    except Exception:
+        pass
 
     return None
+
+
+def normalize_for_docx(image_bytes: bytes, max_side: int = 1200) -> bytes:
+    """Open with PIL, re-encode as JPEG with explicit DPI metadata.
+    python-docx needs DPI info to compute physical size; many web JPEGs/WebPs
+    omit DPI which causes a division-by-zero in add_picture.
+    """
+    from PIL import Image
+    im = Image.open(io.BytesIO(image_bytes))
+    if im.mode in ("RGBA", "P", "LA"):
+        bg = Image.new("RGB", im.size, (255, 255, 255))
+        bg.paste(im, mask=im.split()[-1] if im.mode in ("RGBA", "LA") else None)
+        im = bg
+    elif im.mode != "RGB":
+        im = im.convert("RGB")
+    if max(im.size) > max_side:
+        im.thumbnail((max_side, max_side), Image.LANCZOS)
+    out = io.BytesIO()
+    im.save(out, format="JPEG", quality=88, dpi=(96, 96), optimize=True)
+    return out.getvalue()
 
 
 def build_placeholder_png(color_hex: str, size: int = 600) -> bytes:
@@ -171,6 +239,32 @@ def build_placeholder_png(color_hex: str, size: int = 600) -> bytes:
         iend_chunk = b"IEND"
         iend = struct.pack(">I", 0) + iend_chunk + struct.pack(">I", zlib.crc32(iend_chunk))
         return sig + ihdr_full + idat + iend
+
+
+def set_run_complex_script(run, size_pt: int, bold: bool = False, rtl: bool = True) -> None:
+    """Apply size to both Latin (w:sz) and complex-script (w:szCs) so Hebrew
+    text renders at the requested size, plus optional RTL flag and bold-cs.
+    """
+    rPr = run._element.get_or_add_rPr()
+    half_pts = str(size_pt * 2)
+    for tag in ("w:sz", "w:szCs"):
+        for existing in rPr.findall(qn(tag)):
+            rPr.remove(existing)
+        el = OxmlElement(tag)
+        el.set(qn("w:val"), half_pts)
+        rPr.append(el)
+    if bold:
+        for tag in ("w:b", "w:bCs"):
+            if not rPr.findall(qn(tag)):
+                el = OxmlElement(tag)
+                el.set(qn("w:val"), "1")
+                rPr.append(el)
+    if rtl:
+        for existing in rPr.findall(qn("w:rtl")):
+            rPr.remove(existing)
+        el = OxmlElement("w:rtl")
+        el.set(qn("w:val"), "1")
+        rPr.append(el)
 
 
 def set_cell_bg(cell, hex_color: str) -> None:
@@ -218,12 +312,8 @@ def add_pepper_slide(doc: Document, p: Pepper, image_bytes: Optional[bytes], use
     he_p.paragraph_format.space_before = Pt(8)
     he_run = he_p.add_run(p.he)
     he_run.bold = True
-    he_run.font.size = Pt(36)
     he_run.font.color.rgb = RGBColor(0x10, 0x10, 0x18)
-    rPr = he_run._element.get_or_add_rPr()
-    rtl = OxmlElement("w:rtl")
-    rtl.set(qn("w:val"), "1")
-    rPr.append(rtl)
+    set_run_complex_script(he_run, size_pt=36, bold=True, rtl=True)
 
     en_p = right_cell.add_paragraph()
     en_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
@@ -261,8 +351,9 @@ def add_pepper_slide(doc: Document, p: Pepper, image_bytes: Optional[bytes], use
     img_p = left_cell.paragraphs[0]
     img_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     if image_bytes:
+        normalized = normalize_for_docx(image_bytes)
         try:
-            img_p.add_run().add_picture(io.BytesIO(image_bytes), width=Cm(12))
+            img_p.add_run().add_picture(io.BytesIO(normalized), width=Cm(12))
         except Exception as e:
             print(f"  [{p.num}] add_picture failed: {e}, using placeholder", file=sys.stderr)
             img_p.add_run().add_picture(io.BytesIO(build_placeholder_png(COLOR_HEX[p.color])), width=Cm(12))
@@ -280,12 +371,8 @@ def add_title_page(doc: Document) -> None:
     title_p.paragraph_format.space_before = Pt(120)
     title_r = title_p.add_run("זני פלפלים חריפים")
     title_r.bold = True
-    title_r.font.size = Pt(56)
     title_r.font.color.rgb = RGBColor(0xC9, 0x30, 0x30)
-    rPr = title_r._element.get_or_add_rPr()
-    rtl = OxmlElement("w:rtl")
-    rtl.set(qn("w:val"), "1")
-    rPr.append(rtl)
+    set_run_complex_script(title_r, size_pt=56, bold=True, rtl=True)
 
     year_p = doc.add_paragraph()
     year_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -301,10 +388,7 @@ def add_title_page(doc: Document) -> None:
     sub_r = sub_p.add_run(f"{len(PEPPERS)} זנים — שמות עבריים, אנגליים ותמונות")
     sub_r.font.size = Pt(14)
     sub_r.font.color.rgb = RGBColor(0x80, 0x80, 0x90)
-    sub_rtl = sub_r._element.get_or_add_rPr()
-    rtl2 = OxmlElement("w:rtl")
-    rtl2.set(qn("w:val"), "1")
-    sub_rtl.append(rtl2)
+    set_run_complex_script(sub_r, size_pt=14, bold=False, rtl=True)
 
     doc.add_page_break()
 
