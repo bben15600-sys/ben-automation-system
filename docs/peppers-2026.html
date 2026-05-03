@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>זני פלפלים חריפים 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #060a14;
+    --bg-card: #0d1424;
+    --border: #1a2236;
+    --text: #f5f5fa;
+    --text-dim: #9aa3b8;
+    --accent: #ff5b5b;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Heebo', system-ui, -apple-system, sans-serif;
+    direction: rtl;
+    min-height: 100vh;
+  }
+
+  .deck { display: flex; flex-direction: column; gap: 0; }
+
+  .slide {
+    width: 100%;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 4rem;
+    padding: 5rem 6rem;
+    background: linear-gradient(135deg, #0d1424 0%, #060a14 100%);
+    border-bottom: 1px solid var(--border);
+    page-break-after: always;
+    break-after: page;
+  }
+  .slide:last-child { page-break-after: auto; break-after: auto; border-bottom: 0; }
+
+  .slide .info { display: flex; flex-direction: column; gap: 1.25rem; }
+  .slide .num { color: var(--text-dim); font-size: 1.1rem; letter-spacing: 0.1em; }
+  .slide h1 { font-size: clamp(2.5rem, 5vw, 5rem); font-weight: 900; line-height: 1.05; }
+  .slide .english { color: var(--text-dim); font-size: clamp(1.2rem, 2vw, 1.8rem); font-style: italic; font-weight: 600; }
+  .slide .meta { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .slide .badge {
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .slide .pepper-img-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    position: relative;
+  }
+  .slide img.pepper {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .slide .placeholder {
+    color: var(--text-dim);
+    font-size: 1rem;
+    text-align: center;
+    padding: 2rem;
+    line-height: 1.6;
+  }
+  .slide .placeholder a {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .slide .credit {
+    position: absolute;
+    bottom: 0.5rem;
+    inset-inline-start: 0.75rem;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    background: rgba(0,0,0,0.5);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+  }
+  .slide .credit a { color: inherit; text-decoration: none; }
+
+  /* Title slide */
+  .slide.title {
+    grid-template-columns: 1fr;
+    text-align: center;
+    background: radial-gradient(circle at 50% 30%, #2a0e0e 0%, #060a14 70%);
+  }
+  .slide.title .info { align-items: center; gap: 1.5rem; }
+  .slide.title h1 {
+    font-size: clamp(3rem, 8vw, 7rem);
+    background: linear-gradient(135deg, #ff8a4c, #ff5b5b, #c93030);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .slide.title .year {
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 800;
+    color: var(--text-dim);
+  }
+  .slide.title .subtitle {
+    font-size: 1.25rem;
+    color: var(--text-dim);
+    max-width: 38rem;
+  }
+
+  /* Color accents per Capsicum color */
+  .slide[data-color="red"]      .badge.color { background: #3a0f0f; color: #ff8a8a; border-color: #5c1818; }
+  .slide[data-color="yellow"]   .badge.color { background: #3a2e0f; color: #ffd96a; border-color: #5c4818; }
+  .slide[data-color="orange"]   .badge.color { background: #3a1f0f; color: #ffa566; border-color: #5c3018; }
+  .slide[data-color="chocolate"].badge.color { background: #2a1a0f; color: #c69370; border-color: #4a2f1c; }
+  .slide[data-color="purple"]   .badge.color { background: #2a0f3a; color: #c98aff; border-color: #44185c; }
+  .slide[data-color="white"]    .badge.color { background: #1a2030; color: #e8e8f0; border-color: #2a3045; }
+
+  @media (max-width: 900px) {
+    .slide { grid-template-columns: 1fr; padding: 3rem 1.5rem; gap: 2rem; min-height: auto; }
+    .slide .pepper-img-wrap { max-width: 28rem; margin: 0 auto; }
+  }
+
+  @media print {
+    @page { size: A4 landscape; margin: 0; }
+    html, body { background: #fff; color: #111; }
+    .slide {
+      background: #fff;
+      border: 0;
+      min-height: 100vh;
+      height: 100vh;
+      padding: 2.5cm 3cm;
+    }
+    .slide h1 { color: #111; }
+    .slide .english, .slide .num, .slide .placeholder, .slide .badge { color: #555; }
+    .slide .badge { background: #f5f5f5; border-color: #ddd; }
+    .slide .pepper-img-wrap { background: #f9f9f9; border-color: #ddd; }
+    .slide.title { background: #fff; }
+    .slide.title h1 { color: #c93030; -webkit-text-fill-color: #c93030; }
+    .slide.title .year, .slide.title .subtitle { color: #666; }
+    .slide .credit { display: none; }
+    .print-hint { display: none !important; }
+  }
+
+  .print-hint {
+    position: fixed; bottom: 1rem; inset-inline-end: 1rem;
+    background: var(--bg-card); border: 1px solid var(--border);
+    padding: 0.75rem 1rem; border-radius: 0.5rem;
+    font-size: 0.85rem; color: var(--text-dim);
+    z-index: 100;
+  }
+  .print-hint kbd {
+    background: var(--bg); border: 1px solid var(--border);
+    padding: 0.1rem 0.4rem; border-radius: 0.25rem;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+  <section class="slide title">
+    <div class="info">
+      <h1>זני פלפלים חריפים</h1>
+      <div class="year">2026</div>
+      <div class="subtitle">19 זנים — שמות עבריים, אנגליים ותמונות מ-Wikimedia Commons</div>
+    </div>
+  </section>
+
+  <!-- 1 -->
+  <section class="slide" data-color="yellow"
+           data-search="Yellow Habanero pepper Capsicum chinense"
+           data-wiki="Habanero">
+    <div class="info">
+      <div class="num">1 / 19</div>
+      <h1>אנברו צהוב</h1>
+      <div class="english">Yellow Habanero</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">צהוב</span>
+        <span class="badge">100K–350K SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide" data-color="red"
+           data-search="Red Habanero pepper Capsicum chinense"
+           data-wiki="Habanero">
+    <div class="info">
+      <div class="num">2 / 19</div>
+      <h1>אנברו אדום</h1>
+      <div class="english">Red Habanero</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">אדום</span>
+        <span class="badge">100K–350K SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide" data-color="red"
+           data-search="Carolina Reaper pepper red"
+           data-wiki="Carolina_Reaper">
+    <div class="info">
+      <div class="num">3 / 19</div>
+      <h1>קרולינה ריפר אדום</h1>
+      <div class="english">Carolina Reaper (Red)</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">אדום</span>
+        <span class="badge">~1.6M–2.2M SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide" data-color="chocolate"
+           data-search="Chocolate Habanero pepper brown"
+           data-wiki="Habanero">
+    <div class="info">
+      <div class="num">4 / 19</div>
+      <h1>אנברו שוקולד</h1>
+      <div class="english">Chocolate Habanero</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">שוקולד</span>
+        <span class="badge">300K–425K SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide" data-color="yellow"
+           data-search="Fatalii pepper Capsicum chinense"
+           data-wiki="Fatalii">
+    <div class="info">
+      <div class="num">5 / 19</div>
+      <h1>פטליי (כתום אפריקאי)</h1>
+      <div class="english">Fatalii</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">צהוב</span>
+        <span class="badge">125K–400K SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide" data-color="purple"
+           data-search="Purple Habanero pepper"
+           data-wiki="Habanero">
+    <div class="info">
+      <div class="num">6 / 19</div>
+      <h1>אנברו סגול מקומט</h1>
+      <div class="english">Purple Habanero</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">סגול</span>
+        <span class="badge">100K–350K SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide" data-color="yellow"
+           data-search="Yellow Carolina Reaper pepper"
+           data-wiki="Carolina_Reaper">
+    <div class="info">
+      <div class="num">7 / 19</div>
+      <h1>קרולינה ריפר צהוב</h1>
+      <div class="english">Yellow Carolina Reaper</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">צהוב</span>
+        <span class="badge">~1.4M–2M SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide" data-color="chocolate"
+           data-search="Chocolate Carolina Reaper pepper brown"
+           data-wiki="Carolina_Reaper">
+    <div class="info">
+      <div class="num">8 / 19</div>
+      <h1>קרולינה ריפר שוקולד</h1>
+      <div class="english">Chocolate Carolina Reaper</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">שוקולד</span>
+        <span class="badge">~1.5M–2M SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide" data-color="yellow"
+           data-search="Yellow Bhut Jolokia ghost pepper"
+           data-wiki="Bhut_jolokia">
+    <div class="info">
+      <div class="num">9 / 19</div>
+      <h1>גוליקה בהוט צהוב</h1>
+      <div class="english">Yellow Bhut Jolokia (Ghost Pepper)</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense × frutescens</span>
+        <span class="badge color">צהוב</span>
+        <span class="badge">~800K–1M SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide" data-color="red"
+           data-search="Trinidad Scorpion pepper red"
+           data-wiki="Trinidad_Scorpion_pepper">
+    <div class="info">
+      <div class="num">10 / 19</div>
+      <h1>סקורפיו ריפר אדום</h1>
+      <div class="english">Trinidad Scorpion (Red)</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">אדום</span>
+        <span class="badge">~1.2M–2M SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide" data-color="red"
+           data-search="Cherry Bomb pepper hot"
+           data-wiki="Cherry_pepper">
+    <div class="info">
+      <div class="num">11 / 19</div>
+      <h1>צ׳רי בומב אדום</h1>
+      <div class="english">Cherry Bomb (F1)</div>
+      <div class="meta">
+        <span class="badge">Capsicum annuum</span>
+        <span class="badge color">אדום</span>
+        <span class="badge">2.5K–5K SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide" data-color="purple"
+           data-search="Purple Bhut Jolokia ghost pepper"
+           data-wiki="Bhut_jolokia">
+    <div class="info">
+      <div class="num">12 / 19</div>
+      <h1>גוליקה בהוט סגול</h1>
+      <div class="english">Purple Bhut Jolokia</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">סגול</span>
+        <span class="badge">~800K–1M SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide" data-color="red"
+           data-search="Thai bird's eye chili pepper"
+           data-wiki="Bird%27s_eye_chili">
+    <div class="info">
+      <div class="num">13 / 19</div>
+      <h1>ציפור תאילנדי</h1>
+      <div class="english">Thai Bird's Eye</div>
+      <div class="meta">
+        <span class="badge">Capsicum annuum</span>
+        <span class="badge color">אדום</span>
+        <span class="badge">50K–100K SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 14 -->
+  <section class="slide" data-color="yellow"
+           data-search="Yellow Scotch Bonnet pepper"
+           data-wiki="Scotch_bonnet">
+    <div class="info">
+      <div class="num">14 / 19</div>
+      <h1>גמיקאן ילו צהוב</h1>
+      <div class="english">Yellow Scotch Bonnet</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">צהוב</span>
+        <span class="badge">100K–350K SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 15 -->
+  <section class="slide" data-color="red"
+           data-search="Thai long chili spur pepper"
+           data-wiki="Thai_pepper">
+    <div class="info">
+      <div class="num">15 / 19</div>
+      <h1>צ׳ילי תאילנדי ארוך</h1>
+      <div class="english">Thai Long / Spur Chili</div>
+      <div class="meta">
+        <span class="badge">Capsicum annuum</span>
+        <span class="badge color">אדום</span>
+        <span class="badge">15K–50K SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 16 -->
+  <section class="slide" data-color="white"
+           data-search="White Trinidad Scorpion pepper"
+           data-wiki="Trinidad_Scorpion_pepper">
+    <div class="info">
+      <div class="num">16 / 19</div>
+      <h1>עקרב לבן</h1>
+      <div class="english">White Trinidad Scorpion</div>
+      <div class="meta">
+        <span class="badge">Capsicum chinense</span>
+        <span class="badge color">לבן</span>
+        <span class="badge">~1M+ SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 17 -->
+  <section class="slide" data-color="red"
+           data-search="Pimiento cherry pepper Mexican"
+           data-wiki="Pimiento">
+    <div class="info">
+      <div class="num">17 / 19</div>
+      <h1>דובדבן אדום</h1>
+      <div class="english">Mexican Cherry / Pimiento Cherry</div>
+      <div class="meta">
+        <span class="badge">Capsicum annuum</span>
+        <span class="badge color">אדום</span>
+        <span class="badge">100–500 SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 18 -->
+  <section class="slide" data-color="yellow"
+           data-search="Criolla Sella aji pepper Capsicum baccatum"
+           data-wiki="Capsicum_baccatum">
+    <div class="info">
+      <div class="num">18 / 19</div>
+      <h1>קריולה סלה</h1>
+      <div class="english">Criolla Sella (Aji Crystal)</div>
+      <div class="meta">
+        <span class="badge">Capsicum baccatum</span>
+        <span class="badge color">צהוב</span>
+        <span class="badge">~30K SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+  <!-- 19 -->
+  <section class="slide" data-color="orange"
+           data-search="Aji Lantern Bishop's crown pepper"
+           data-wiki="Bishop%27s_crown">
+    <div class="info">
+      <div class="num">19 / 19</div>
+      <h1>אנברו מנורת לילה</h1>
+      <div class="english">Aji Lantern / Bishop's Crown</div>
+      <div class="meta">
+        <span class="badge">Capsicum baccatum</span>
+        <span class="badge color">כתום</span>
+        <span class="badge">5K–30K SHU</span>
+      </div>
+    </div>
+    <div class="pepper-img-wrap"><div class="placeholder">טוען תמונה…</div></div>
+  </section>
+
+</div>
+
+<div class="print-hint">להדפסה ל-PDF: <kbd>Ctrl/Cmd + P</kbd> ← נוף לרוחב</div>
+
+<script>
+(async function loadPepperImages() {
+  const slides = document.querySelectorAll('.slide[data-search]');
+
+  async function searchCommons(query) {
+    const url = `https://commons.wikimedia.org/w/api.php?` + new URLSearchParams({
+      action: 'query',
+      format: 'json',
+      generator: 'search',
+      gsrsearch: `${query} filetype:bitmap`,
+      gsrnamespace: '6',
+      gsrlimit: '5',
+      prop: 'imageinfo',
+      iiprop: 'url|extmetadata',
+      iiurlwidth: '900',
+      origin: '*',
+    });
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Commons API ' + r.status);
+    const j = await r.json();
+    const pages = j.query && j.query.pages ? Object.values(j.query.pages) : [];
+    pages.sort((a, b) => (a.index || 99) - (b.index || 99));
+    for (const p of pages) {
+      const ii = p.imageinfo && p.imageinfo[0];
+      if (!ii) continue;
+      const title = (p.title || '').toLowerCase();
+      if (/\.(svg|tif|tiff|pdf)$/.test(title)) continue;
+      return {
+        thumb: ii.thumburl || ii.url,
+        descUrl: ii.descriptionurl || ii.descriptionshorturl,
+        title: p.title,
+      };
+    }
+    return null;
+  }
+
+  async function getWikipediaThumb(slug) {
+    const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${slug}`);
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (j.thumbnail && j.thumbnail.source) {
+      return {
+        thumb: j.originalimage ? j.originalimage.source : j.thumbnail.source,
+        descUrl: j.content_urls && j.content_urls.desktop ? j.content_urls.desktop.page : null,
+        title: j.title,
+      };
+    }
+    return null;
+  }
+
+  for (const slide of slides) {
+    const wrap = slide.querySelector('.pepper-img-wrap');
+    const search = slide.dataset.search;
+    const wiki = slide.dataset.wiki;
+    let img = null;
+    try {
+      img = await searchCommons(search);
+    } catch (e) { /* swallow, try fallback */ }
+    if (!img && wiki) {
+      try { img = await getWikipediaThumb(wiki); } catch (e) {}
+    }
+
+    if (img) {
+      wrap.innerHTML = '';
+      const el = document.createElement('img');
+      el.className = 'pepper';
+      el.src = img.thumb;
+      el.alt = search;
+      el.loading = 'lazy';
+      el.onerror = () => {
+        wrap.innerHTML = `<div class="placeholder">לא ניתן לטעון תמונה.<br/><a href="https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(search)}" target="_blank" rel="noopener">חפש ב-Wikimedia Commons</a></div>`;
+      };
+      wrap.appendChild(el);
+      if (img.descUrl) {
+        const c = document.createElement('div');
+        c.className = 'credit';
+        c.innerHTML = `<a href="${img.descUrl}" target="_blank" rel="noopener">מקור: Wikimedia</a>`;
+        wrap.appendChild(c);
+      }
+    } else {
+      wrap.innerHTML = `<div class="placeholder">לא נמצאה תמונה אוטומטית.<br/><a href="https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(search)}" target="_blank" rel="noopener">חפש ב-Wikimedia Commons</a></div>`;
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
