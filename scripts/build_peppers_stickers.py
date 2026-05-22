@@ -112,21 +112,24 @@ def crop_cover(im: Image.Image, target_w: int, target_h: int) -> Image.Image:
 
 def make_sticker(pepper_img_bytes: bytes, name_he: str, logo: Image.Image,
                  size: tuple[int, int]) -> Image.Image:
-    """Compose one oval sticker."""
+    """Compose one rounded-square sticker."""
     sw, sh = size
     canvas = Image.new("RGBA", (sw, sh), (0, 0, 0, 0))
 
-    # Oval mask
+    # Rounded-rectangle mask (sticker shape)
+    radius = max(12, int(min(sw, sh) * 0.08))
     mask = Image.new("L", (sw, sh), 0)
-    ImageDraw.Draw(mask).ellipse((0, 0, sw - 1, sh - 1), fill=255)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (0, 0, sw - 1, sh - 1), radius=radius, fill=255
+    )
 
-    # Pepper image cropped to oval
+    # Pepper image cropped to sticker shape
     pep = Image.open(io.BytesIO(pepper_img_bytes)).convert("RGB")
     pep = crop_cover(pep, sw, sh)
     canvas.paste(pep, (0, 0), mask=mask)
 
     # Bottom name banner (semi-transparent gradient)
-    band_h = int(sh * 0.30)
+    band_h = int(sh * 0.26)
     band = Image.new("RGBA", (sw, band_h), (0, 0, 0, 0))
     bdraw = ImageDraw.Draw(band)
     for y in range(band_h):
@@ -138,9 +141,9 @@ def make_sticker(pepper_img_bytes: bytes, name_he: str, logo: Image.Image,
     d = ImageDraw.Draw(canvas)
 
     # Hebrew name
-    max_text_w = int(sw * 0.72)
+    max_text_w = int(sw * 0.82)
     name_font = fit_text_to_width(d, name_he, FONT_HEB_BOLD, max_text_w,
-                                  start_size=int(sh * 0.10), min_size=16)
+                                  start_size=int(sh * 0.11), min_size=16)
     try:
         bbox = d.textbbox((0, 0), name_he, font=name_font, direction="rtl")
     except TypeError:
@@ -162,12 +165,11 @@ def make_sticker(pepper_img_bytes: bytes, name_he: str, logo: Image.Image,
     except TypeError:
         d.text((tx, ty), name_he, font=name_font, fill=(255, 255, 255, 255))
 
-    # Logo top-right (use top-left in visual sense — but user said ימין למעלה
-    # which is the right side; in LTR pixel coords that's the right edge).
-    logo_size = int(sw * 0.30)
+    # Logo top-right corner
+    logo_size = int(sw * 0.28)
     logo_resized = logo.copy()
     logo_resized.thumbnail((logo_size, logo_size), Image.LANCZOS)
-    pad = int(sw * 0.04)
+    pad = int(sw * 0.045)
     lx = sw - logo_resized.width - pad
     ly = pad
     # Soft white glow behind logo so it pops on busy backgrounds
@@ -178,10 +180,15 @@ def make_sticker(pepper_img_bytes: bytes, name_he: str, logo: Image.Image,
     canvas.alpha_composite(glow, (lx, ly))
     canvas.alpha_composite(logo_resized, (lx, ly))
 
-    # Thin red outline ring on the oval
+    # Thin red outline along the rounded-square edge
     outline = Image.new("RGBA", (sw, sh), (0, 0, 0, 0))
     od = ImageDraw.Draw(outline)
-    od.ellipse((1, 1, sw - 2, sh - 2), outline=(201, 48, 48, 255), width=max(3, int(sw * 0.012)))
+    od.rounded_rectangle(
+        (1, 1, sw - 2, sh - 2),
+        radius=radius,
+        outline=(201, 48, 48, 255),
+        width=max(3, int(sw * 0.012)),
+    )
     canvas.alpha_composite(outline)
 
     return canvas
