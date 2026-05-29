@@ -166,10 +166,10 @@ def make_sticker(pepper_img_bytes: bytes, name_he: str, logo: Image.Image,
         d.text((tx, ty), name_he, font=name_font, fill=(255, 255, 255, 255))
 
     # Logo top-right corner
-    logo_size = int(sw * 0.28)
+    logo_size = int(sw * 0.36)
     logo_resized = logo.copy()
     logo_resized.thumbnail((logo_size, logo_size), Image.LANCZOS)
-    pad = int(sw * 0.045)
+    pad = int(sw * 0.035)
     lx = sw - logo_resized.width - pad
     ly = pad
     # Soft white glow behind logo so it pops on busy backgrounds
