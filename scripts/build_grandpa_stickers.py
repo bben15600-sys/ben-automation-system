@@ -24,7 +24,10 @@ from build_peppers_stickers import (  # type: ignore
 )
 
 REPO = Path(__file__).resolve().parent.parent
-PHOTOS_DIR = REPO / "assets" / "pepper-photos"
+# Prefer the cleaned (text-inpainted) folder if it exists, else the originals.
+PHOTOS_DIR_CLEAN = REPO / "assets" / "pepper-photos-clean"
+PHOTOS_DIR_RAW = REPO / "assets" / "pepper-photos"
+PHOTOS_DIR = PHOTOS_DIR_CLEAN if PHOTOS_DIR_CLEAN.exists() else PHOTOS_DIR_RAW
 DOCS = REPO / "docs"
 
 # Hand-curated mapping (identified by visual inspection of each file).
