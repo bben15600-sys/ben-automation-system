@@ -27,3 +27,6 @@ logs/
 .vscode/
 .idea/
 .next/
+
+# Transient session handoff counters
+.claude/auto-handoff/
